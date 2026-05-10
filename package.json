@@ -38,6 +38,7 @@
     "build": "tsc && vite build",
     "check:encoding": "node scripts/check-encoding.mjs",
     "build:electron": "npm run build && electron-builder --publish=never",
+    "auto:update": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/auto-update-git.ps1",
     "preview": "vite preview"
   },
   "build": {
