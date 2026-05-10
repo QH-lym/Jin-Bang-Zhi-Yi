@@ -29,6 +29,15 @@ function Test-HasGitChanges {
   return [bool]$status
 }
 
+function Test-HasUnpushedCommits {
+  try {
+    $ahead = git -C $repoRoot rev-list --count "@{u}..HEAD" 2>$null
+    return ([int]$ahead) -gt 0
+  } catch {
+    return $false
+  }
+}
+
 function Stop-PackagedApp {
   $releaseDir = Join-Path $repoRoot "release\win-unpacked"
   if (-not (Test-Path $releaseDir)) {
@@ -107,7 +116,16 @@ Invoke-Step "Check git changes" {
 }
 
 if (-not (Test-HasGitChanges)) {
-  Write-Host "No git changes to update."
+  if (Test-HasUnpushedCommits) {
+    Invoke-Step "Push existing local commits via HTTPS token to $Branch" {
+      Push-WithToken -Url $RepoUrl -TargetBranch $Branch
+    }
+    Write-Host ""
+    Write-Host "Auto update finished."
+    exit 0
+  }
+
+  Write-Host "No git changes or unpushed commits to update."
   exit 0
 }
 
