@@ -1,0 +1,45 @@
+# ═══════════════════════════════════════════════
+#  Docker 忽略文件
+# ═══════════════════════════════════════════════
+
+# 依赖目录
+node_modules
+
+# 构建输出
+dist
+release
+
+# 开发文件
+*.log
+.env.local
+.env.*.local
+
+# IDE 配置
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# 测试
+coverage
+*.test.ts
+*.spec.ts
+__tests__
+
+# 文档
+*.md
+!README.md
+
+# 临时文件
+*.tmp
+*.temp
+.cache
