@@ -1,4 +1,4 @@
-import { lazy, useMemo, useState, useCallback } from 'react'
+import { Suspense, lazy, useMemo, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight,
@@ -32,6 +32,15 @@ const HanfuRental = lazy(() => import('./HanfuRental'))
 const AdminDashboard = lazy(() => import('./AdminDashboard'))
 const WatchPanel = lazy(() => import('./WatchPanel'))
 const UserSettingsModal = lazy(() => import('./UserSettingsModal'))
+const logoUrl = `${import.meta.env.BASE_URL}logo.png`
+
+function ModuleFallback() {
+  return (
+    <div className="flex min-h-[18rem] items-center justify-center">
+      <div className="glass-control rounded-2xl px-5 py-3 text-sm text-white/60">正在加载模块...</div>
+    </div>
+  )
+}
 
 type TabId = 'watch' | 'study' | 'shop' | 'course' | 'social' | 'map' | 'chat' | 'face' | 'admin'
 
@@ -186,15 +195,16 @@ export default function Dashboard({
   }, [accountInfo])
 
   return (
-    <div className="ios-app-bg min-h-screen">
+    <div className="ios-app-bg flex min-h-full flex-col lg:h-full lg:overflow-hidden">
       {/* ===== HEADER BAR (all screen sizes) ===== */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center ios-topbar px-3 lg:px-6">
+      <header className="sticky top-0 z-50 flex shrink-0 items-center ios-topbar px-3 lg:px-6">
         {/* LOGO */}
         <div className="flex items-center gap-2.5 mr-4">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-300 via-orange-500 to-red-600 flex items-center justify-center shadow-md shadow-amber-500/15 ring-1 ring-white/20">
-            <span className="text-sm font-bold text-white">晋</span>
+          <img src={logoUrl} alt="晋梆智绎" className="brand-mark h-9 w-9 rounded-xl" />
+          <div className="hidden sm:block">
+            <span className="block text-base font-bold text-amber-100">晋梆智绎</span>
+            <span className="block text-[11px] text-white/38">三晋非遗数字平台</span>
           </div>
-          <span className="text-base font-bold text-amber-200 hidden sm:inline">晋梆智绎</span>
         </div>
 
         {/* Right side */}
@@ -250,7 +260,7 @@ export default function Dashboard({
       <nav className="fixed z-40 flex justify-around ios-tabbar px-1 py-1 lg:hidden">
         {menuItems.filter(item => item.id !== 'admin' || isAdmin).map(item => (
           <button key={item.id} onClick={() => navigateTo(item.id)}
-            className={`ios-touch ios-focus-ring flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl text-[10px] transition-all ${activeTab === item.id ? 'text-amber-200 bg-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]' : 'text-white/45 hover:text-white/75'}`}>
+            className={`ios-touch ios-focus-ring flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl text-[10px] transition-all ${activeTab === item.id ? 'nav-active' : 'text-white/48 hover:text-white/80 hover:bg-white/[0.06]'}`}>
             <item.icon className="h-4 w-4" />
             <span>{item.label}</span>
           </button>
@@ -258,13 +268,13 @@ export default function Dashboard({
       </nav>
 
       {/* Body: sidebar + main + right sidebar */}
-      <div className="pt-[calc(3.75rem+env(safe-area-inset-top))] pb-24 lg:pb-0 lg:flex lg:h-screen lg:overflow-hidden">
+      <div className="min-h-0 flex-1 pb-24 lg:flex lg:overflow-hidden lg:pb-0">
         {/* Desktop Sidebar */}
         <aside className="ios-sidebar hidden lg:flex lg:w-56 lg:flex-col lg:overflow-y-auto text-white">
           <nav className="flex-1 px-3 pt-5 space-y-1">
             {menuItems.filter(item => item.id !== 'admin' || isAdmin).map(item => (
               <button key={item.id} onClick={() => navigateTo(item.id)}
-                className={`ios-touch ios-focus-ring flex items-center gap-3 w-full rounded-2xl px-4 py-3 text-sm font-medium transition-all ${activeTab === item.id ? 'bg-white/[0.12] text-amber-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]' : 'text-white/[0.48] hover:text-white/[0.82] hover:bg-white/[0.07]'}`}>
+                className={`ios-touch ios-focus-ring flex items-center gap-3 w-full rounded-2xl px-4 py-3 text-sm font-medium transition-all ${activeTab === item.id ? 'nav-active' : 'text-white/[0.52] hover:text-white/[0.86] hover:bg-white/[0.07]'}`}>
                 <item.icon className="h-5 w-5" />
                 <span>{item.label}</span>
               </button>
@@ -273,18 +283,18 @@ export default function Dashboard({
         </aside>
 
         {/* Main Content */}
-        <main className="ios-main flex-1 overflow-y-auto rounded-[2rem] mx-2 my-2 text-white">
+        <main className="ios-main min-w-0 flex-1 overflow-y-auto rounded-[2rem] mx-2 my-2 text-white">
           <div className="p-3 sm:p-4 lg:p-7">
             {/* Tab Header Card */}
             <div className="ios-hero p-5 sm:p-6 mb-5">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] text-amber-100/85">
+                  <div className="section-kicker mb-3 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px]">
                     <Sparkles className="h-3.5 w-3.5" />
-                    模块联动中 · 最近访问 {recentActions.join(' / ')}
+                    模块联动 · 最近访问 {recentActions.join(' / ')}
                   </div>
-                  <h2 className="text-xl font-bold text-white">{currentTab.title}</h2>
-                  <p className="text-sm text-white/50 mt-1">{currentTab.subtitle}</p>
+                  <h2 className="text-2xl font-bold text-white sm:text-3xl">{currentTab.title}</h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/58">{currentTab.subtitle}</p>
                 </div>
                 <div className="flex w-full max-w-xl flex-col gap-3 sm:flex-row">
                   <div className="relative flex-1">
@@ -297,7 +307,7 @@ export default function Dashboard({
                       className="ios-focus-ring w-full rounded-2xl pl-11 pr-4 py-3 text-sm text-white outline-none placeholder-white/35 glass-control"
                     />
                   </div>
-                  <button onClick={handleSmartSearch} className="ios-touch ios-focus-ring inline-flex items-center justify-center gap-2 rounded-2xl bg-white/[0.12] px-5 py-3 text-sm font-bold text-amber-100 hover:bg-white/[0.18]">
+                  <button onClick={handleSmartSearch} className="ios-touch ios-focus-ring inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400/18 px-5 py-3 text-sm font-bold text-amber-100 hover:bg-amber-400/24">
                     智能前往
                     <ArrowRight className="h-4 w-4" />
                   </button>
@@ -308,18 +318,29 @@ export default function Dashboard({
             <ConnectedHub activeTab={activeTab} onNavigate={navigateTo} />
 
             {/* Tab Content Wrapper */}
-            <div className="ios-content p-4 sm:p-5">
-              {/* Tab Content */}
-{activeTab === 'watch' && <WatchPanel isAdmin={isAdmin} />}
-            {activeTab === 'study' && <HanfuRental currentAccount={accountInfo} />}
-            {activeTab === 'shop' && (<div className="space-y-5"><ShopPanel currentAccount={accountInfo} initialQuery={shopEntryQuery} /><SalesFlowMap /></div>)}
-            {activeTab === 'chat' && <AIChat />}
-            {activeTab === 'course' && <CoursePanel query={courseQuery} onQueryChange={setCourseQuery} selectedCategory={selectedCourseCategory} onCategoryChange={setSelectedCourseCategory} courses={filteredCourses} categories={courseCategories} onSelectCourse={handleSelectCourse} isAdmin={isAdmin} showAddCourse={showAddCourse} onToggleAddCourse={() => setShowAddCourse(p => !p)} newCourse={newCourse} onNewCourseChange={setNewCourse} onAddCourse={handleAddCourse} />}
-            {activeTab === 'social' && <SocialPanel query={socialQuery} onQueryChange={setSocialQuery} posts={postsState} selectedType={selectedPostType} onTypeChange={setSelectedPostType} types={postTypes} likedPosts={likedPosts} onToggleLike={(id) => setLikedPosts(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })} onSelectPost={(p) => { setSelectedPost(p); setShowPostDetail(true) }} onPublish={handlePublishPost} onDeletePost={(id) => setPostsState(p => p.filter(x => x.id !== id))} isAdmin={isAdmin} />}
-            {activeTab === 'map' && <OperaMap onExploreFace={handleGoToFace} />}
-            {activeTab === 'face' && <FaceWorkshop initialTemplate={naviTemplate} onViewShop={(query) => navigateTo('shop', { shopQuery: query })} />}
-            {activeTab === 'admin' && isAdmin && <AdminDashboard />}
-            {activeTab === 'admin' && !isAdmin && <div className="py-20 text-center text-white/30"><Shield className="h-12 w-12 mx-auto mb-3 opacity-30" /><p className="text-sm">仅管理员可访问</p></div>}
+            <div className="ios-content p-4 sm:p-5 lg:p-6">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Suspense fallback={<ModuleFallback />}>
+                    {activeTab === 'watch' && <WatchPanel isAdmin={isAdmin} />}
+                    {activeTab === 'study' && <HanfuRental currentAccount={accountInfo} />}
+                    {activeTab === 'shop' && (<div className="space-y-5"><ShopPanel currentAccount={accountInfo} initialQuery={shopEntryQuery} /><SalesFlowMap /></div>)}
+                    {activeTab === 'chat' && <AIChat />}
+                    {activeTab === 'course' && <CoursePanel query={courseQuery} onQueryChange={setCourseQuery} selectedCategory={selectedCourseCategory} onCategoryChange={setSelectedCourseCategory} courses={filteredCourses} categories={courseCategories} onSelectCourse={handleSelectCourse} isAdmin={isAdmin} showAddCourse={showAddCourse} onToggleAddCourse={() => setShowAddCourse(p => !p)} newCourse={newCourse} onNewCourseChange={setNewCourse} onAddCourse={handleAddCourse} />}
+                    {activeTab === 'social' && <SocialPanel query={socialQuery} onQueryChange={setSocialQuery} posts={postsState} selectedType={selectedPostType} onTypeChange={setSelectedPostType} types={postTypes} likedPosts={likedPosts} onToggleLike={(id) => setLikedPosts(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })} onSelectPost={(p) => { setSelectedPost(p); setShowPostDetail(true) }} onPublish={handlePublishPost} onDeletePost={(id) => setPostsState(p => p.filter(x => x.id !== id))} isAdmin={isAdmin} />}
+                    {activeTab === 'map' && <OperaMap onExploreFace={handleGoToFace} />}
+                    {activeTab === 'face' && <FaceWorkshop initialTemplate={naviTemplate} onViewShop={(query) => navigateTo('shop', { shopQuery: query })} />}
+                    {activeTab === 'admin' && isAdmin && <AdminDashboard />}
+                    {activeTab === 'admin' && !isAdmin && <div className="py-20 text-center text-white/30"><Shield className="h-12 w-12 mx-auto mb-3 opacity-30" /><p className="text-sm">仅管理员可访问</p></div>}
+                  </Suspense>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </main>

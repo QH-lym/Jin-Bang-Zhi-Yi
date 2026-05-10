@@ -7,7 +7,6 @@ import cloudbaseSDK from '@cloudbase/js-sdk'
 const envId = import.meta.env.VITE_CLOUDBASE_ENV_ID || 'sjy-d0gxtaklr8e1be761'
 const region = import.meta.env.VITE_CLOUDBASE_REGION || 'ap-shanghai'
 const publishableKey = import.meta.env.VITE_TCB_PUBLISHABLE_KEY || ''
-const serverKey = import.meta.env.VITE_TCB_SERVER_KEY || ''
 
 // 统一初始化
 export const cloudbase = cloudbaseSDK.init({
@@ -20,7 +19,6 @@ export const tcbConfig = {
   env: envId,
   region,
   publishableKey,
-  serverKey,
   endpoints: {
     storage: `https://${envId}-1429062856.tcb.qcloud.la`,
     auth: `https://${envId}.${region}.tcb-api.tencentcloudapi.com`,
@@ -88,3 +86,21 @@ export async function uploadFile(file: File, path: string): Promise<string | nul
 export function getFileUrl(fileId: string): string {
   return `${tcbConfig.endpoints.storage}/${fileId}`
 }
+
+// ═══════════════════════════════════════════════
+//  数据库工具（统一导出）
+// ═══════════════════════════════════════════════
+export {
+  dbQuery,
+  dbGetById,
+  dbInsert,
+  dbBatchInsert,
+  dbUpdate,
+  dbDelete,
+  dbCount,
+  type DbResult,
+  type DbOneResult,
+  type DbFilter,
+  type SortDirection,
+  type Pagination,
+} from './rdb'

@@ -2,7 +2,7 @@ import { tcbConfig } from '../utils/cloudbase'
 
 type CollectionName = 'products' | 'orders' | 'rentalOrders' | 'posts' | 'hanfuItems'
 
-const HTTP_BASE = tcbConfig.endpoints.http
+const HTTP_BASE = import.meta.env.VITE_CLOUD_API_BASE || ''
 
 interface TcbResponse<T = any> {
   documents?: T[]
@@ -12,8 +12,8 @@ interface TcbResponse<T = any> {
 
 /** 通用 HTTP 请求封装 */
 async function tcbRequest<T = any>(path: string, method: string = 'GET', body?: any): Promise<T | null> {
-  if (!tcbConfig.serverKey) {
-    console.warn('[Cloud] Server key not configured')
+  if (!HTTP_BASE) {
+    console.warn('[Cloud] API proxy not configured')
     return null
   }
   try {
@@ -21,7 +21,6 @@ async function tcbRequest<T = any>(path: string, method: string = 'GET', body?: 
       method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${tcbConfig.serverKey}`,
       },
       body: body ? JSON.stringify(body) : undefined,
     })
@@ -54,7 +53,7 @@ export async function updateDocument(collection: CollectionName, docId: string, 
 /** 云端同步状态 */
 export function getCloudSyncStatus() {
   return {
-    ready: !!(tcbConfig.serverKey && tcbConfig.env),
+    ready: !!(HTTP_BASE && tcbConfig.env),
     env: tcbConfig.env,
     region: tcbConfig.region,
   }
@@ -62,9 +61,9 @@ export function getCloudSyncStatus() {
 
 /** 上传文件到云存储 */
 export async function uploadToCloud(_file: File, _path: string): Promise<string | null> {
-  const res = await fetch(`/api/v1/files/upload`, {
+  if (!HTTP_BASE) return null
+  const res = await fetch(`${HTTP_BASE}/api/v1/files/upload`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${tcbConfig.serverKey}` },
     body: _file,
   })
   if (!res.ok) throw new Error(`Upload failed: ${res.status}`)

@@ -1,0 +1,286 @@
+/**
+ * 自适应按钮样式
+ * 支持不同平台的视觉和交互效果
+ */
+
+/* 基础按钮样式 */
+.adaptive-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 变体样式 - Primary */
+.adaptive-btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.adaptive-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.adaptive-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.3);
+}
+
+/* 变体样式 - Secondary */
+.adaptive-btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.adaptive-btn-secondary:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.adaptive-btn-secondary:active:not(:disabled) {
+  background: #d1d5db;
+}
+
+/* 变体样式 - Danger */
+.adaptive-btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.adaptive-btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
+}
+
+/* 变体样式 - Ghost */
+.adaptive-btn-ghost {
+  background: transparent;
+  color: #6b7280;
+}
+
+.adaptive-btn-ghost:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* 触摸设备特定样式 */
+.adaptive-btn-touch {
+  /* 增大触摸目标 */
+  min-height: 44px;
+  min-width: 44px;
+  
+  /* 触摸反馈 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.adaptive-btn-touch:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* 鼠标设备特定样式 */
+.adaptive-btn-mouse {
+  /* 鼠标设备可以有更精细的悬停效果 */
+}
+
+.adaptive-btn-mouse:hover:not(:disabled) {
+  /* 悬停效果在CSS变体中定义 */
+}
+
+/* 按下状态 */
+.adaptive-btn-pressed {
+  transform: scale(0.98);
+}
+
+.adaptive-btn-pressed.adaptive-btn-primary {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+/* 长按状态 */
+.adaptive-btn-long-pressed {
+  opacity: 0.8;
+}
+
+/* 加载状态 */
+.adaptive-btn-loading {
+  cursor: wait;
+  opacity: 0.8;
+}
+
+.adaptive-btn-loading .adaptive-btn-content {
+  opacity: 0.6;
+}
+
+/* 禁用状态 */
+.adaptive-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 全宽样式 */
+.adaptive-btn-full-width {
+  width: 100%;
+}
+
+/* 图标样式 */
+.adaptive-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.adaptive-btn-icon svg {
+  width: 1em;
+  height: 1em;
+}
+
+.adaptive-btn-icon-left {
+  margin-right: 4px;
+}
+
+.adaptive-btn-icon-right {
+  margin-left: 4px;
+}
+
+/* 加载动画 */
+.adaptive-btn-spinner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+}
+
+.adaptive-btn-spinner svg {
+  width: 100%;
+  height: 100%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 触摸波纹效果 */
+.adaptive-btn-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  animation: ripple 0.4s ease-out;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+/* 焦点样式 - 键盘导航 */
+.adaptive-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+/* 触摸设备上的焦点样式 */
+.adaptive-btn-touch:focus-visible {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .adaptive-btn {
+    /* 小屏幕上按钮稍微紧凑 */
+    font-size: 14px;
+  }
+  
+  .adaptive-btn-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .adaptive-btn {
+    /* 大屏幕上的按钮 */
+    font-size: 16px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .adaptive-btn-secondary {
+    background: #374151;
+    color: #f9fafb;
+    border-color: #4b5563;
+  }
+  
+  .adaptive-btn-secondary:hover:not(:disabled) {
+    background: #4b5563;
+    border-color: #6b7280;
+  }
+  
+  .adaptive-btn-ghost {
+    color: #9ca3af;
+  }
+  
+  .adaptive-btn-ghost:hover:not(:disabled) {
+    background: #374151;
+    color: #f9fafb;
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .adaptive-btn,
+  .adaptive-btn-spinner svg,
+  .adaptive-btn-ripple {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .adaptive-btn {
+    border: 2px solid currentColor;
+  }
+  
+  .adaptive-btn:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+  }
+}

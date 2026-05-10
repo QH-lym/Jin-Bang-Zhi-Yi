@@ -1,20 +1,22 @@
-# ═══════════════════════════════════════════════
-#  Docker 忽略文件
-# ═══════════════════════════════════════════════
+# Docker ignore file
 
-# 依赖目录
+# Dependencies
 node_modules
 
-# 构建输出
+# Build output
 dist
 release
 
-# 开发文件
+# Development files
 *.log
 .env.local
 .env.*.local
+.uploads
+.npm-cache
+__pycache__
+*.pyc
 
-# IDE 配置
+# IDE
 .idea
 .vscode
 *.swp
@@ -29,17 +31,17 @@ Dockerfile
 .dockerignore
 docker-compose.yml
 
-# 测试
+# Tests
 coverage
 *.test.ts
 *.spec.ts
 __tests__
 
-# 文档
+# Documentation
 *.md
 !README.md
 
-# 临时文件
+# Temporary files
 *.tmp
 *.temp
 .cache

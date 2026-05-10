@@ -1,0 +1,322 @@
+/**
+ * 自适应卡片样式
+ */
+
+/* 基础卡片样式 */
+.adaptive-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+/* 变体样式 - 默认 */
+.adaptive-card-default {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* 变体样式 - 描边 */
+.adaptive-card-outlined {
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+/* 变体样式 - 阴影 */
+.adaptive-card-elevated {
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.adaptive-card-elevated:hover {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* 变体样式 - 扁平 */
+.adaptive-card-flat {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+/* 可点击卡片 */
+.adaptive-card-clickable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.adaptive-card-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.adaptive-card-clickable:active {
+  transform: translateY(0);
+}
+
+/* 按下状态 */
+.adaptive-card-pressed {
+  transform: scale(0.98);
+}
+
+/* 触摸设备样式 */
+.adaptive-card-touch {
+  /* 触摸设备优化 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.adaptive-card-touch.adaptive-card-clickable:active {
+  transform: scale(0.98);
+}
+
+/* 鼠标设备样式 */
+.adaptive-card-mouse {
+  /* 鼠标设备可以有更精细的悬停效果 */
+}
+
+/* 内边距变体 */
+.adaptive-card-padding-none .adaptive-card-content {
+  padding: 0;
+}
+
+.adaptive-card-padding-small .adaptive-card-content {
+  padding: 12px;
+}
+
+.adaptive-card-padding-medium .adaptive-card-content {
+  padding: 16px;
+}
+
+.adaptive-card-padding-large .adaptive-card-content {
+  padding: 24px;
+}
+
+/* 媒体位置 */
+.adaptive-card-media-top {
+  flex-direction: column;
+}
+
+.adaptive-card-media-bottom {
+  flex-direction: column-reverse;
+}
+
+.adaptive-card-media-left {
+  flex-direction: row;
+}
+
+.adaptive-card-media-right {
+  flex-direction: row-reverse;
+}
+
+/* 媒体容器 */
+.adaptive-card-media {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.adaptive-card-media-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.adaptive-card-media-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.adaptive-card-clickable:hover .adaptive-card-media-image {
+  transform: scale(1.05);
+}
+
+/* 内容区域 */
+.adaptive-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 头部 */
+.adaptive-card-header {
+  margin-bottom: 12px;
+}
+
+.adaptive-card-header-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.adaptive-card-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.adaptive-card-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.adaptive-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.adaptive-card-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.adaptive-card-action {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* 主体内容 */
+.adaptive-card-body {
+  flex: 1;
+  color: #374151;
+  line-height: 1.6;
+}
+
+/* 底部 */
+.adaptive-card-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* 触摸波纹效果 */
+.adaptive-card-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  animation: card-ripple 0.4s ease-out;
+  pointer-events: none;
+}
+
+@keyframes card-ripple {
+  to {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+/* 焦点样式 */
+.adaptive-card-clickable:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .adaptive-card {
+    border-radius: 8px;
+  }
+  
+  .adaptive-card-padding-medium .adaptive-card-content {
+    padding: 12px;
+  }
+  
+  .adaptive-card-padding-large .adaptive-card-content {
+    padding: 16px;
+  }
+  
+  .adaptive-card-title {
+    font-size: 15px;
+  }
+  
+  .adaptive-card-subtitle {
+    font-size: 13px;
+  }
+  
+  /* 小屏幕上水平媒体布局改为垂直 */
+  .adaptive-card-media-left,
+  .adaptive-card-media-right {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 1024px) {
+  .adaptive-card {
+    border-radius: 16px;
+  }
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  .adaptive-card-default,
+  .adaptive-card-elevated {
+    background: #1f2937;
+  }
+  
+  .adaptive-card-outlined,
+  .adaptive-card-flat {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .adaptive-card-title {
+    color: #f9fafb;
+  }
+  
+  .adaptive-card-subtitle {
+    color: #9ca3af;
+  }
+  
+  .adaptive-card-body {
+    color: #d1d5db;
+  }
+  
+  .adaptive-card-footer {
+    border-top-color: #374151;
+  }
+  
+  .adaptive-card-media-container {
+    background: #374151;
+  }
+}
+
+/* 减少动画 */
+@media (prefers-reduced-motion: reduce) {
+  .adaptive-card,
+  .adaptive-card-media-image,
+  .adaptive-card-ripple {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .adaptive-card {
+    border: 2px solid currentColor;
+  }
+  
+  .adaptive-card-clickable:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+  }
+}

@@ -5,7 +5,6 @@
 export const tcbConfig = {
   env: import.meta.env.VITE_TCB_ENV || 'sjy-d0gxtaklr8e1be761',
   publishableKey: import.meta.env.VITE_TCB_PUBLISHABLE_KEY || '',
-  serverKey: import.meta.env.VITE_TCB_SERVER_KEY || '',
   region: 'ap-shanghai',
   // HTTP API 端点
   endpoints: {

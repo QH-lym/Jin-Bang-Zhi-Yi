@@ -1,4 +1,5 @@
-﻿import { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
+import { requestAiChat } from '../utils/aiClient'
 
 type ChatMessage = {
   role: 'system' | 'user' | 'assistant'
@@ -37,8 +38,6 @@ export default function AIChat() {
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
-  const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY
-
   const sendMessage = async (text?: string) => {
     const msg = (text || inputValue).trim()
     if (!msg) return
@@ -49,28 +48,12 @@ export default function AIChat() {
     setInputValue('')
     setLoading(true)
 
-    if (!apiKey) {
-      const reply = demoReply(msg)
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
-      setLoading(false)
-      setTimeout(() => inputRef.current?.focus(), 50)
-      return
-    }
-
     try {
-      const response = await fetch('https://api.deepseek.com/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: nextMessages.map(m => ({ role: m.role, content: m.content })),
-          temperature: 0.7,
-          max_tokens: 600,
-        }),
-      })
-      if (!response.ok) throw new Error((await response.json().catch(() => ({})))?.error?.message || '请求失败')
-      const result = await response.json()
-      const reply = result.choices?.[0]?.message?.content?.trim() || '抱歉，未收到有效回复。'
+      const reply = await requestAiChat({
+        messages: nextMessages.map(m => ({ role: m.role, content: m.content })),
+        temperature: 0.7,
+        maxTokens: 600,
+      }) || demoReply(msg)
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => inputRef.current?.focus(), 50)
     } catch (err) {

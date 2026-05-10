@@ -3,9 +3,12 @@ import { motion } from 'framer-motion'
 import { Users, Package, BookOpen, Shield, TrendingUp, Clock, ChevronDown } from 'lucide-react'
 import type { Account } from '../accountStore'
 import { getAccounts, updateAccountRole } from '../accountStore'
-import { loadOrders as loadRentalOrders, RentalOrder, statusConfig } from '../data/hanfuData'
-import { syncAllToCloud } from '../utils/cloudSync'
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { loadOrders as loadRentalOrders, loadOrdersFromDB, RentalOrder, statusConfig } from '../data/hanfuData'
+// import { pullCloudDataToLocal, syncAllToCloud } from '../utils/cloudSync'
+import CloudSyncPanel from './CloudSyncPanel'
+import CloudSyncDebug from './CloudSyncDebug'
+import { getShopOrders } from '../data/dbStore'
+import { CheckCircle, AlertCircle } from 'lucide-react'
 
 type AdminTab = 'overview' | 'users' | 'orders' | 'content'
 
@@ -15,30 +18,21 @@ export default function AdminDashboard() {
   const [rentalOrders, setRentalOrders] = useState<RentalOrder[]>([])
   const [shopOrders, setShopOrders] = useState<any[]>([])
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [syncing, setSyncing] = useState(false)
-  const [syncResult, setSyncResult] = useState<Record<string, boolean> | null>(null)
+  // const [_syncing, setSyncing] = useState(false)
+  // const [syncResult, setSyncResult] = useState<Record<string, boolean> | null>(null)
+  const [syncResult, _setSyncResult] = useState<Record<string, boolean> | null>(null)
+  const [showSyncPanel, setShowSyncPanel] = useState(false)
 
   useEffect(() => { loadData() }, [])
 
   const loadData = async () => {
     setAccounts(await getAccounts())
-    setRentalOrders(loadRentalOrders())
-    setShopOrders(JSON.parse(localStorage.getItem('jh_orders') || '[]'))
+    const dbRentalOrders = await loadOrdersFromDB()
+    setRentalOrders(dbRentalOrders.length > 0 ? dbRentalOrders : loadRentalOrders())
+    setShopOrders(await getShopOrders())
   }
 
-  const handleSyncAll = async () => {
-    setSyncing(true)
-    setSyncResult(null)
-    try {
-      const results = await syncAllToCloud()
-      setSyncResult(results)
-      console.log('[Cloud] 同步完成:', results)
-    } catch (err) {
-      console.error('[Cloud] 同步失败:', err)
-    } finally {
-      setSyncing(false)
-    }
-  }
+
 
   const adminAccounts = accounts.filter(a => a.role === 'admin')
   const userAccounts = accounts.filter(a => a.role === 'user')
@@ -235,10 +229,9 @@ export default function AdminDashboard() {
         <button onClick={loadData} className="rounded-xl glass-control px-4 py-2 text-xs text-white/50 hover:text-white mr-2">
           🔄 刷新数据
         </button>
-        <button onClick={handleSyncAll} disabled={syncing}
-          className="rounded-xl px-4 py-2 text-xs font-bold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-2">
-          {syncing ? <Loader2 className="h-3 w-3 animate-spin" /> : (syncResult ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />)}
-          {syncing ? '同步中...' : '📡 同步腾讯云'}
+        <button onClick={() => setShowSyncPanel(true)}
+          className="rounded-xl px-4 py-2 text-xs font-bold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 flex items-center gap-2 mx-2">
+          📡 同步腾讯云
         </button>
         {syncResult && (
           <div className="mt-3 text-left max-h-48 overflow-auto rounded-xl glass-panel p-3 text-xs space-y-1">
@@ -252,6 +245,25 @@ export default function AdminDashboard() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* 云端同步弹窗 */}
+      {showSyncPanel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowSyncPanel(false)}>
+          <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto mx-4" onClick={e => e.stopPropagation()}>
+            <CloudSyncPanel
+              onClose={() => {
+                setShowSyncPanel(false)
+                loadData() // 同步完成后刷新数据
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 云端同步调试 */}
+      <div className="mt-8">
+        <CloudSyncDebug />
       </div>
         </div>
     )

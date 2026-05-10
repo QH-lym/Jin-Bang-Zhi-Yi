@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "openapi": [
+      "*"
+    ]
+  },
+  "triggers": [],
+  "timeout": 20,
+  "memorySize": 256,
+  "environment": {
+    "NODE_ENV": "production"
+  }
+}

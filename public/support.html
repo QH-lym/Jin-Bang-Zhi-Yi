@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支持信息 - 晋梆智绎</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: rgba(255,255,255,0.85);
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 40px;
+    }
+    h2 {
+      font-size: 18px;
+      color: #fff;
+      margin: 32px 0 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    h3 {
+      font-size: 15px;
+      color: rgba(255,255,255,0.9);
+      margin: 20px 0 8px;
+    }
+    p { margin: 8px 0; font-size: 14px; }
+    ul { padding-left: 24px; margin: 8px 0; }
+    li { font-size: 14px; margin: 4px 0; }
+    strong { color: #fbbf24; }
+    a { color: #60a5fa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+    }
+    .back {
+      display: inline-block;
+      margin-bottom: 24px;
+      color: rgba(255,255,255,0.5);
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .back:hover { color: #fff; }
+    .highlight {
+      background: rgba(251, 191, 36, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #fbbf24;
+    }
+    .link-list a {
+      display: block;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .link-list a:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="./">← 返回首页</a>
+    <h1>支持信息</h1>
+    <p class="subtitle">帮助您更好地使用晋梆智绎平台</p>
+
+    <div class="card">
+      <div class="card-title">📱 快速访问</div>
+      <div class="link-list">
+        <a href="./">🏠 应用首页</a>
+        <a href="./privacy.html">🔒 隐私政策</a>
+        <a href="#faq">❓ 常见问题</a>
+        <a href="#contact">📞 联系我们</a>
+      </div>
+    </div>
+
+    <h2 id="about">关于晋梆智绎</h2>
+    <p><strong>晋梆智绎</strong>是一款基于现代Web技术栈开发的<strong>晋剧文化数字化展示与互动平台</strong>，旨在通过沉浸式数字体验，传承和推广山西晋剧这一国家级非物质文化遗产。</p>
+    <p>平台融合了3D可视化、实时互动、云端数据同步等前沿技术，为用户提供全方位的晋剧文化探索体验。</p>
+
+    <h2 id="features">主要功能</h2>
+    <ul>
+      <li><strong>3D脸谱工坊</strong>：交互式3D晋剧脸谱展示，支持旋转、缩放</li>
+      <li><strong>汉服租赁</strong>：在线浏览、预订汉服，支持到店取衣或快递配送</li>
+      <li><strong>文创商城</strong>：脸谱面具、戏曲周边、定制礼品购买</li>
+      <li><strong>云端同步</strong>：本地数据自动备份到云端，多设备无缝切换</li>
+      <li><strong>数据可视化</strong>：销售流向图、运营仪表盘</li>
+      <li><strong>AI对话</strong>：智能问答，晋剧知识咨询</li>
+    </ul>
+
+    <h2 id="tech">技术架构</h2>
+    <h3>前端技术</h3>
+    <ul>
+      <li><strong>React 18</strong> + <strong>TypeScript</strong>：组件化开发，类型安全</li>
+      <li><strong>Three.js</strong>：3D可视化渲染</li>
+      <li><strong>Tailwind CSS</strong>：原子化CSS样式</li>
+      <li><strong>Framer Motion</strong>：流畅动画效果</li>
+    </ul>
+    <h3>后端服务</h3>
+    <ul>
+      <li><strong>腾讯云 CloudBase</strong>：无服务器架构，云函数 + 云数据库</li>
+      <li><strong>IndexedDB</strong>：浏览器本地数据存储</li>
+      <li><strong>HTTPS</strong>：全站加密传输</li>
+    </ul>
+
+    <h2 id="faq">常见问题 (FAQ)</h2>
+    
+    <h3>Q1: 数据存储在哪里？</h3>
+    <p>您的数据首先存储在浏览器本地（IndexedDB），确保离线可用。开启同步功能后，数据会加密传输并存储在腾讯云服务器上。</p>
+
+    <h3>Q2: 如何同步数据到云端？</h3>
+    <p>登录后，系统会自动在后台同步您的数据。您也可以进入「管理后台」→「同步腾讯云」手动触发同步。</p>
+
+    <h3>Q3: 支持哪些浏览器？</h3>
+    <p>推荐使用 Chrome、Edge、Firefox、Safari 等现代浏览器。IE 浏览器不支持。</p>
+
+    <h3>Q4: 如何租赁汉服？</h3>
+    <p>进入「汉服租赁」页面 → 选择心仪款式 → 选择租赁日期 → 填写联系信息 → 提交订单 → 等待确认。</p>
+
+    <h3>Q5: 订单如何支付？</h3>
+    <p>目前支持微信支付、支付宝等多种支付方式。具体支付方式以结算页面显示为准。</p>
+
+    <h3>Q6: 忘记密码怎么办？</h3>
+    <p>请联系管理员重置密码。目前版本暂不支持自助找回密码功能。</p>
+
+    <h3>Q7: 如何导出我的数据？</h3>
+    <p>进入「用户设置」→「数据管理」→「导出数据」，可将您的本地数据导出为 JSON 文件。</p>
+
+    <h2 id="system">系统要求</h2>
+    <ul>
+      <li><strong>操作系统</strong>：Windows 10/11、macOS 10.14+、Linux、iOS、Android</li>
+      <li><strong>浏览器</strong>：Chrome 90+、Edge 90+、Firefox 88+、Safari 14+</li>
+      <li><strong>网络</strong>：建议宽带或4G/5G网络</li>
+      <li><strong>存储空间</strong>：浏览器需至少 50MB 可用空间</li>
+    </ul>
+
+    <h2 id="update">更新日志</h2>
+    <div class="card">
+      <div class="card-title">v1.0.0 (2026-05-10)</div>
+      <ul>
+        <li>🎉 首次发布</li>
+        <li>✨ 3D脸谱展示功能</li>
+        <li>✨ 汉服租赁系统</li>
+        <li>✨ 文创商城</li>
+        <li>✨ 云端数据同步</li>
+        <li>✨ 数据可视化仪表盘</li>
+      </ul>
+    </div>
+
+    <h2 id="download">下载安装</h2>
+    <div class="card">
+      <div class="card-title">🖥️ 桌面应用下载（Windows）</div>
+      <p>版本：v1.0.0 | 大小：约 107 MB | 平台：Windows x64</p>
+      <p style="margin-top: 12px;">
+        <a href="./downloads/v1.0.0/晋梆智绎-Setup-1.0.0.exe" 
+           style="display: inline-block; padding: 10px 24px; background: #3b82f6; color: #fff; border-radius: 8px; text-decoration: none; font-weight: bold;">
+          ⬇️ 下载安装包 (v1.0.0)
+        </a>
+      </p>
+      <p style="margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.5);">下载后双击运行安装即可</p>
+    </div>
+
+    <h2 id="contact">联系我们</h2>
+    <div class="card">
+      <p><strong>项目名称</strong>：晋梆智绎</p>
+      <p><strong>服务地址</strong>：<a href="https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com">https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com</a></p>
+      <p><strong>隐私政策</strong>：<a href="./privacy.html">点击查看</a></p>
+      <p><strong>技术支持</strong>：腾讯云 CloudBase</p>
+    </div>
+
+    <h2 id="legal">法律信息</h2>
+    <ul>
+      <li><a href="./privacy.html">隐私政策</a> - 了解我们如何保护您的个人信息</li>
+      <li>© 2026 晋梆智绎 版权所有</li>
+    </ul>
+
+    <div class="footer">
+      <p>© 2026 晋梆智绎 版权所有</p>
+      <p style="margin-top: 8px;">技术支持：腾讯云 CloudBase</p>
+    </div>
+  </div>
+</body>
+</html>

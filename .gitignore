@@ -1,18 +1,30 @@
 # Dependencies
-node_modules
-.npm-cache
+node_modules/
+.npm-cache/
+.pnp
+.pnp.js
 
 # Build output
-dist
+dist/
+release/
 
 # Environment files
 .env
 .env.local
 .env.*.local
 
+# Runtime and uploads
+.uploads/
+__pycache__/
+*.py[cod]
+
+# Logs
+*.log
+npm-debug.log*
+
 # IDE
-.vscode
-.idea
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
@@ -21,13 +33,5 @@ dist
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-npm-debug.log*
-
 # Claude
-.claude
-
-# Runtime
-.pnp
-.pnp.js
+.claude/

@@ -1,13 +1,18 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Clock, Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react'
-import { cloudbase } from '../utils/cloudbase'
 import CanvasBackground from './CanvasBackground'
 import QPagoda from './QPagoda'
 import { Account, loginAccount, registerAccount, resetAccountPassword } from '../accountStore'
 import { syncUserToCloud } from '../utils/cloudSync'
 type View = 'login' | 'register' | 'forgot' | 'email' | 'sms'
 type ToastType = 'success' | 'error' | 'info'
+const logoUrl = `${import.meta.env.BASE_URL}logo.png`
+
+async function getCloudbaseAuth() {
+  const { cloudbase } = await import('../utils/cloudbase')
+  return cloudbase.auth()
+}
 
 export default function LoginPage({
   onLoginSuccess,
@@ -159,7 +164,7 @@ export default function LoginPage({
     if (!emailForm.email) { showToast('请填写邮箱', 'error'); return }
     setEmailLoading(true)
     try {
-      const auth = cloudbase.auth()
+      const auth = await getCloudbaseAuth()
       const res = await auth.getVerification({ email: emailForm.email })
       setEmailVerification(res)
       setEmailStep('code')
@@ -175,7 +180,7 @@ export default function LoginPage({
     if (!emailForm.code) { showToast('请输入验证码', 'error'); return }
     setEmailLoading(true)
     try {
-      const auth = cloudbase.auth()
+      const auth = await getCloudbaseAuth()
       await auth.signInWithEmail({
         verificationInfo: emailVerification,
         verificationCode: emailForm.code,
@@ -221,7 +226,7 @@ export default function LoginPage({
     if (!smsForm.phone) { showToast('请填写手机号', 'error'); return }
     setSmsLoading(true)
     try {
-      const auth = cloudbase.auth()
+      const auth = await getCloudbaseAuth()
       const res = await auth.getVerification({ phone_number: `+86 ${smsForm.phone}` })
       setSmsVerification(res)
       setSmsStep('code')
@@ -237,7 +242,7 @@ export default function LoginPage({
     if (!smsForm.code) { showToast('请输入验证码', 'error'); return }
     setSmsLoading(true)
     try {
-      const auth = cloudbase.auth()
+      const auth = await getCloudbaseAuth()
       await auth.signInWithSms({
         verificationInfo: smsVerification,
         verificationCode: smsForm.code,
@@ -289,7 +294,7 @@ export default function LoginPage({
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-y-auto overflow-x-hidden bg-[#090506] lg:overflow-hidden">
       <CanvasBackground />
       <QPagoda />
 
@@ -313,62 +318,44 @@ export default function LoginPage({
       </AnimatePresence>
 
       <div className="relative z-10 flex min-h-screen flex-col lg:flex-row">
-        <div className="absolute left-4 top-4 space-y-1 font-mono text-xs text-amber-500/50">
-          <div>晋梆智译 v1.0</div>
-          <div>三晋非遗数据库</div>
-          <div>VISUALIZATION</div>
-        </div>
-
-        <div className="absolute left-1/2 top-4 -translate-x-1/2 font-mono text-xs text-amber-500/50">
-          <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-green-500/70" />
-          SYSTEM ONLINE | 2026/05/07
-        </div>
-        <div className="absolute left-1/2 top-10 -translate-x-1/2 text-center text-xs text-amber-300/70">
-          <div className="inline-flex items-center gap-2 rounded-md bg-black/30 px-3 py-1 backdrop-blur-sm">
-            <span className="text-xs">提示：</span>
-            <span className="text-xs">双击背景可切换榫卯结构组装/拆分，点击背景会产生粒子效果</span>
+        <div className="absolute left-5 top-5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-xs text-amber-100/70 backdrop-blur-xl">
+            <img src={logoUrl} alt="" className="brand-mark h-6 w-6 rounded-lg" />
+            <span>晋梆智绎</span>
           </div>
         </div>
 
-        <div className="absolute right-4 top-4 space-y-1 text-right font-mono text-xs text-amber-500/50">
-          <div>ADMIN: admin / 123456</div>
-          <div>ACCOUNT: LOCAL</div>
-          <div>MODE: EXPLORE</div>
-        </div>
-
-        <div className="flex flex-1 flex-col justify-center border-b border-red-800/30 px-8 py-16 lg:w-1/2 lg:border-b-0 lg:border-r lg:px-16">
+        <div className="flex flex-1 flex-col justify-center border-b border-white/10 px-8 pb-10 pt-24 lg:w-1/2 lg:border-b-0 lg:border-r lg:px-16 lg:py-20">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="mb-8">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/30 to-red-900/50">
-                <User className="h-7 w-7 text-amber-400" />
-              </div>
-              <span className="bg-gradient-to-r from-amber-200 to-amber-400 bg-clip-text font-serif text-xl font-bold text-transparent">
-                晋梆智译
+              <img src={logoUrl} alt="晋梆智绎" className="brand-mark h-14 w-14 rounded-2xl" />
+              <span className="bg-gradient-to-r from-amber-100 to-amber-300 bg-clip-text font-serif text-2xl font-bold text-transparent">
+                晋梆智绎
               </span>
             </div>
           </motion.div>
 
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="mb-6 text-4xl font-serif font-bold leading-tight md:text-5xl lg:text-6xl">
-            <span className="bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent">
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="mb-6 max-w-2xl font-serif text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
+            <span className="bg-gradient-to-r from-amber-100 via-amber-300 to-emerald-100 bg-clip-text text-transparent">
               三晋非遗数字化赋能平台
             </span>
           </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-10 max-w-xl text-lg text-white/70">
-            注册账户即可进入个人资料空间，管理员可查看账户资料。
+          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-10 max-w-xl text-lg leading-relaxed text-white/72">
+            汇集晋剧观赏、汉服租赁、文创商城、脸谱工坊与文化地图，让非遗内容从浏览、学习到体验自然流转。
           </motion.p>
-          <div className="space-y-3">
-            {['#管理员账号：admin', '#个人资料本地保存', '#注册账户自动加入资料库'].map((tag) => (
-              <div key={tag} className="inline-flex items-center gap-2 rounded-lg border border-amber-500/20 bg-red-900/20 px-4 py-2 text-sm text-amber-400/80">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+          <div className="flex flex-wrap gap-3">
+            {['晋剧演艺', '汉服租赁', '非遗文创', '脸谱创作'].map((tag) => (
+              <div key={tag} className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm text-amber-100/82">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
                 {tag}
               </div>
             ))}
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col justify-center px-8 py-16 lg:w-1/2 lg:px-16">
+        <div className="flex flex-1 flex-col justify-center px-8 pb-14 pt-8 lg:w-1/2 lg:px-16 lg:py-20">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="mx-auto w-full max-w-md">
-            <div className="rounded-2xl p-8 glass-window">
+            <div className="rounded-3xl p-8 glass-window">
               <AnimatePresence mode="wait">
                 {currentView === 'login' && (
                   <motion.div key="login" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="space-y-6">
@@ -378,7 +365,7 @@ export default function LoginPage({
                         <input
                           value={loginForm.username}
                           onChange={(event) => setLoginForm((prev) => ({ ...prev, username: event.target.value }))}
-                          placeholder="请输入账号（管理员：admin）"
+                          placeholder="请输入账号、邮箱或手机号"
                           className="w-full rounded-xl px-12 py-3.5 text-white outline-none placeholder-white/40 glass-control focus:border-amber-500/50"
                         />
                       </Field>
@@ -386,7 +373,7 @@ export default function LoginPage({
                         label="密码"
                         value={loginForm.password}
                         visible={loginForm.showPassword}
-                        placeholder="请输入密码（管理员：123456）"
+                        placeholder="请输入密码"
                         onChange={(value) => setLoginForm((prev) => ({ ...prev, password: value }))}
                         onToggle={() => setLoginForm((prev) => ({ ...prev, showPassword: !prev.showPassword }))}
                       />
@@ -530,6 +517,13 @@ export default function LoginPage({
       <div className="pointer-events-none fixed right-4 top-4 z-50 h-16 w-16 border-r border-t border-amber-500/20" />
       <div className="pointer-events-none fixed bottom-4 left-4 z-50 h-16 w-16 border-l border-b border-amber-500/20" />
       <div className="pointer-events-none fixed bottom-4 right-4 z-50 h-16 w-16 border-r border-b border-amber-500/20" />
+
+      {/* 底部链接 */}
+      <div className="fixed bottom-6 left-0 right-0 z-40 flex justify-center gap-6 text-xs text-white/40">
+        <a href="./privacy.html" target="_blank" className="hover:text-amber-400 transition-colors">隐私政策</a>
+        <span className="text-white/20">|</span>
+        <a href="./support.html" target="_blank" className="hover:text-amber-400 transition-colors">支持信息</a>
+      </div>
     </div>
   )
 }

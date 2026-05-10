@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { motion } from 'framer-motion'
+import { requestAiChat } from '../utils/aiClient'
 import {
   Download,
   Eraser,
@@ -1300,25 +1301,21 @@ export default function FaceWorkshop({
         templateRef.current === 'zhangfei' ? '张飞' :
         templateRef.current === 'wukong' ? '悟空' : '空白'
       const systemPrompt = `你是一个中国戏曲脸谱配色专家。用户描述想要的风格，你返回JSON数组建议。每个建议包含：area(面部区域名), color(十六进制色码), note(为什么用这个颜色，一句话)。最多5条。格式：[{"area":"额头","color":"#CC0000","note":"正红色象征忠勇"}]`
-      const res = await fetch('https://api.deepseek.com/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: [
+      const text = await requestAiChat({
+        messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: `当前底版：${templateName}。用户需求：${prompt}` },
           ],
-          temperature: 0.8,
-          max_tokens: 800,
-        }),
+        temperature: 0.8,
+        maxTokens: 800,
       })
-      if (!res.ok) throw new Error(`API ${res.status}`)
-      const data = await res.json()
-      const text = data.choices?.[0]?.message?.content || ''
+
+      if (!text) {
+        setAiError('请先配置 AI 代理服务')
+        setAiLoading(false)
+        return
+      }
+
       const jsonMatch = text.match(/\[[\s\S]*\]/)
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0])
