@@ -1,7 +1,10 @@
 param(
+  [string]$Remote = $(if ($env:GIT_PUSH_REMOTE) { $env:GIT_PUSH_REMOTE } else { "origin" }),
   [string]$RepoUrl = $env:GIT_PUSH_URL,
   [string]$Branch = $(if ($env:GIT_PUSH_BRANCH) { $env:GIT_PUSH_BRANCH } else { "master" }),
   [string]$CommitPrefix = "auto update",
+  [ValidateSet("remote", "token")]
+  [string]$PushMode = $(if ($env:GIT_PUSH_MODE) { $env:GIT_PUSH_MODE } else { "remote" }),
   [switch]$SkipElectronBuild
 )
 
@@ -111,14 +114,27 @@ if ($Prompt -match "Username") {
   }
 }
 
+function Push-Updates {
+  param(
+    [string]$TargetBranch
+  )
+
+  if ($PushMode -eq "token") {
+    Push-WithToken -Url $RepoUrl -TargetBranch $TargetBranch
+    return
+  }
+
+  git -C $repoRoot push $Remote "HEAD:$TargetBranch"
+}
+
 Invoke-Step "Check git changes" {
   git -C $repoRoot status --short
 }
 
 if (-not (Test-HasGitChanges)) {
   if (Test-HasUnpushedCommits) {
-    Invoke-Step "Push existing local commits via HTTPS token to $Branch" {
-      Push-WithToken -Url $RepoUrl -TargetBranch $Branch
+    Invoke-Step "Push existing local commits to $Remote/$Branch" {
+      Push-Updates -TargetBranch $Branch
     }
     Write-Host ""
     Write-Host "Auto update finished."
@@ -156,8 +172,8 @@ Invoke-Step "Create commit: $message" {
   git -C $repoRoot commit -m $message
 }
 
-Invoke-Step "Push via HTTPS token to $Branch" {
-  Push-WithToken -Url $RepoUrl -TargetBranch $Branch
+Invoke-Step "Push to $Remote/$Branch" {
+  Push-Updates -TargetBranch $Branch
 }
 
 Write-Host ""
