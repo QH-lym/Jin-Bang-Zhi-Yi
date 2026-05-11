@@ -1,4 +1,4 @@
-# SJY Server - 独立后端服务
+﻿# SJY Server - 独立后端服务
 
 使用 **Server Key** 调用腾讯云 CloudBase 的独立 Node.js 后端服务。
 
@@ -176,7 +176,7 @@ server/
 3. **限制 CORS 域名**
    ```env
    # 生产环境
-   CORS_ORIGIN=https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com
+   CORS_ORIGIN=http://jinbangzhiyi.online
    ```
 
 4. **添加请求限流**

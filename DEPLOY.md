@@ -1,4 +1,4 @@
-# 🚀 部署指南
+﻿# 🚀 部署指南
 
 ## 📋 密钥配置状态
 
@@ -117,7 +117,7 @@ tcb fn invoke auth --data '{"action":"anonymous"}'
 部署完成后，访问以下地址：
 
 ```
-https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com
+http://jinbangzhiyi.online
 ```
 
 ### 验证 4：同步功能测试

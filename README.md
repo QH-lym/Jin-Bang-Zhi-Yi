@@ -1,4 +1,4 @@
-# 晋梆智绎
+﻿# 晋梆智绎
 
 晋剧文化数字化展示与互动平台，包含 Web 前端、Electron 桌面端、Android 端、CloudBase 云函数和独立 Node 服务。
 
@@ -8,11 +8,11 @@
 
 | 用途 | 链接 |
 | --- | --- |
-| 官网首页 | `https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com/` |
-| 软件包下载 | `https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com/downloads/v1.0.0/jin-bang-zhi-yi-setup-1.0.0.exe` |
-| 隐私政策 | `https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com/privacy.html` |
-| 支持信息 | `https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com/support.html` |
-| 安装失败说明 | `https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com/installer-exit-codes.html` |
+| 官网首页 | `http://jinbangzhiyi.online/` |
+| 软件包下载 | `http://jinbangzhiyi.online/downloads/v1.0.0/jin-bang-zhi-yi-setup-1.0.0.exe` |
+| 隐私政策 | `http://jinbangzhiyi.online/privacy.html` |
+| 支持信息 | `http://jinbangzhiyi.online/support.html` |
+| 安装失败说明 | `http://jinbangzhiyi.online/installer-exit-codes.html` |
 
 更多链接见 [项目链接整理](docs/项目链接整理.md)。
 
@@ -60,4 +60,4 @@ npm run check:encoding   # 检查文本编码
 
 - `dist/`、`release/`、`node_modules/`、`.env` 已在 `.gitignore` 中忽略。
 - 当前安装包超过 100 MB，不适合直接提交到 GitHub；如需长期版本管理，建议使用 CloudBase 静态托管、GitHub Release 或对象存储保存安装包。
-- 旧自定义域名 `jinbangzhiyi.qd.je` 当前不可用，正式对外链接统一使用 CloudBase 默认域名。
+- 正式对外链接统一使用 `http://jinbangzhiyi.online/` 域名。

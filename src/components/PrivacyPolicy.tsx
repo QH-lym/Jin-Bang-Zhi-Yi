@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════
 //  隐私政策页面
 // ═══════════════════════════════════════════════
 
@@ -16,7 +16,7 @@ const PrivacyPolicy: React.FC = () => {
           <p>晋梆智绎（以下简称"我们"）非常重视用户的隐私保护。本隐私政策旨在向您说明我们如何收集、使用、存储和保护您的个人信息。请您在使用我们的产品和服务前，仔细阅读本隐私政策。</p>
           <p className="mt-2">本隐私政策适用于您通过以下方式访问和使用我们的服务：</p>
           <ul className="list-disc pl-5 mt-1 space-y-1">
-            <li>网页端：https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com</li>
+            <li>网页端：http://jinbangzhiyi.online</li>
             <li>桌面应用端（如有）</li>
           </ul>
         </section>
@@ -117,7 +117,7 @@ const PrivacyPolicy: React.FC = () => {
           <p>如果您对本隐私政策有任何疑问、意见或建议，请通过以下方式联系我们：</p>
           <ul className="list-disc pl-5 mt-1 space-y-1">
             <li><strong>项目名称</strong>：晋梆智绎</li>
-            <li><strong>服务地址</strong>：https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com</li>
+            <li><strong>服务地址</strong>：http://jinbangzhiyi.online</li>
             <li><strong>云服务提供商</strong>：腾讯云 CloudBase</li>
           </ul>
         </section>
