@@ -117,7 +117,7 @@ tcb fn invoke auth --data '{"action":"anonymous"}'
 部署完成后，访问以下地址：
 
 ```
-https://jinbangzhiyi.qd.je
+https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com
 ```
 
 ### 验证 4：同步功能测试

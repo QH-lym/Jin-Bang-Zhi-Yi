@@ -176,7 +176,7 @@ server/
 3. **限制 CORS 域名**
    ```env
    # 生产环境
-   CORS_ORIGIN=https://jinbangzhiyi.qd.je
+   CORS_ORIGIN=https://sjy-d0gxtaklr8e1be761-1429062856.tcloudbaseapp.com
    ```
 
 4. **添加请求限流**
