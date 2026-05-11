@@ -117,7 +117,7 @@ tcb fn invoke auth --data '{"action":"anonymous"}'
 部署完成后，访问以下地址：
 
 ```
-http://jinbangzhiyi.online
+https://jinbangzhiyi.online
 ```
 
 ### 验证 4：同步功能测试

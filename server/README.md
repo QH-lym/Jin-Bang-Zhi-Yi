@@ -176,7 +176,7 @@ server/
 3. **限制 CORS 域名**
    ```env
    # 生产环境
-   CORS_ORIGIN=http://jinbangzhiyi.online
+   CORS_ORIGIN=https://jinbangzhiyi.online
    ```
 
 4. **添加请求限流**
