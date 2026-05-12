@@ -61,6 +61,7 @@
 !macroend
 
 !macro customInit
+  SetSilent silent
   !insertmacro checkSameVersionInstalled HKCU
   !insertmacro checkSameVersionInstalled HKLM
   !insertmacro checkPendingReboot

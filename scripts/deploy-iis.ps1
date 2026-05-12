@@ -5,6 +5,11 @@ param(
   [string]$PhysicalPath = "C:\inetpub\wwwroot\jin-bang-zhi-yi",
   [int]$Port = 80,
   [string]$HostName = "",
+  [switch]$EnableHttps,
+  [int]$HttpsPort = 443,
+  [string]$CertPfxPath = "",
+  [string]$CertZipPath = "",
+  [string]$CertPasswordPath = "",
   [switch]$Build,
   [switch]$InstallIIS
 )
@@ -31,6 +36,20 @@ function Invoke-Robocopy {
     throw "robocopy failed with exit code $code."
   }
   $global:LASTEXITCODE = 0
+}
+
+function Resolve-OptionalPath {
+  param([string]$Path)
+
+  if (-not $Path) {
+    return ""
+  }
+
+  if ([IO.Path]::IsPathRooted($Path)) {
+    return $Path
+  }
+
+  return (Join-Path $repoRoot $Path)
 }
 
 Assert-Admin
@@ -62,6 +81,60 @@ if ($InstallIIS) {
 
 Import-Module WebAdministration
 
+$certThumbprint = ""
+if ($EnableHttps) {
+  $certWorkDir = ""
+
+  if ($CertZipPath) {
+    $resolvedCertZip = Resolve-OptionalPath $CertZipPath
+    if (-not (Test-Path $resolvedCertZip)) {
+      throw "Certificate zip not found: $resolvedCertZip"
+    }
+
+    $certWorkDir = Join-Path $env:TEMP ("jin-bang-zhi-yi-cert-" + [guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $certWorkDir -Force | Out-Null
+    Expand-Archive -LiteralPath $resolvedCertZip -DestinationPath $certWorkDir -Force
+
+    if (-not $CertPfxPath) {
+      $pfx = Get-ChildItem -LiteralPath $certWorkDir -Filter *.pfx | Select-Object -First 1
+      if (-not $pfx) {
+        throw "No .pfx file found in certificate zip."
+      }
+      $CertPfxPath = $pfx.FullName
+    }
+
+    if (-not $CertPasswordPath) {
+      $passwordFile = Get-ChildItem -LiteralPath $certWorkDir -Filter *password*.txt | Select-Object -First 1
+      if ($passwordFile) {
+        $CertPasswordPath = $passwordFile.FullName
+      }
+    }
+  } else {
+    $CertPfxPath = Resolve-OptionalPath $CertPfxPath
+    $CertPasswordPath = Resolve-OptionalPath $CertPasswordPath
+  }
+
+  if (-not $CertPfxPath -or -not (Test-Path $CertPfxPath)) {
+    throw "HTTPS was requested but no PFX certificate was found."
+  }
+
+  if ($CertPasswordPath) {
+    if (-not (Test-Path $CertPasswordPath)) {
+      throw "Certificate password file not found: $CertPasswordPath"
+    }
+    $certPassword = ConvertTo-SecureString ((Get-Content -LiteralPath $CertPasswordPath -Raw).Trim()) -AsPlainText -Force
+  } else {
+    $certPassword = Read-Host "PFX password" -AsSecureString
+  }
+
+  $importedCert = Import-PfxCertificate -FilePath $CertPfxPath -CertStoreLocation Cert:\LocalMachine\My -Password $certPassword
+  $certThumbprint = $importedCert.Thumbprint
+
+  if ($certWorkDir -and (Test-Path $certWorkDir)) {
+    Remove-Item -LiteralPath $certWorkDir -Recurse -Force
+  }
+}
+
 New-Item -ItemType Directory -Path $PhysicalPath -Force | Out-Null
 Invoke-Robocopy -From $resolvedSource -To $PhysicalPath
 
@@ -88,9 +161,23 @@ if (-not $binding) {
 }
 
 Start-WebAppPool -Name $AppPoolName -ErrorAction SilentlyContinue
+
+if ($EnableHttps) {
+  $httpsBindingInfo = if ($HostName) { "*:${HttpsPort}:${HostName}" } else { "*:${HttpsPort}:" }
+  $httpsBinding = Get-WebBinding -Name $SiteName -Protocol "https" | Where-Object { $_.bindingInformation -eq $httpsBindingInfo }
+  if (-not $httpsBinding) {
+    New-WebBinding -Name $SiteName -Protocol "https" -Port $HttpsPort -HostHeader $HostName -SslFlags $(if ($HostName) { 1 } else { 0 }) | Out-Null
+  }
+  (Get-WebBinding -Name $SiteName -Protocol "https" | Where-Object { $_.bindingInformation -eq $httpsBindingInfo }).AddSslCertificate($certThumbprint, "My")
+}
+
 Start-Website -Name $SiteName
 
 $urlHost = if ($HostName) { $HostName } else { "localhost" }
 $urlPort = if ($Port -eq 80) { "" } else { ":$Port" }
 Write-Host "Deployment completed: http://$urlHost$urlPort/"
+if ($EnableHttps) {
+  $httpsUrlPort = if ($HttpsPort -eq 443) { "" } else { ":$HttpsPort" }
+  Write-Host "HTTPS binding: https://$urlHost$httpsUrlPort/"
+}
 Write-Host "Physical path: $PhysicalPath"
