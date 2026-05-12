@@ -5,12 +5,19 @@ import { fileURLToPath } from 'node:url'
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const textExts = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.css', '.html', '.json'])
 const ignoredDirs = new Set(['.git', 'dist', 'node_modules', 'release', '.npm-cache'])
+const ignoredPaths = [
+  join(root, 'android', 'app', 'build'),
+  join(root, 'android', 'app', 'src', 'main', 'assets', 'public'),
+]
 const mojibakePattern = /�|[鏅婕姹绉绮惧搧濂界墿儬欏鎴忌洸鑴歌氨宸潑灏廵绠＄悊馃鈥]{2,}/
 
 function walk(dir, files = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.isDirectory()) {
-      if (!ignoredDirs.has(entry.name)) walk(join(dir, entry.name), files)
+      const nextDir = join(dir, entry.name)
+      if (!ignoredDirs.has(entry.name) && !ignoredPaths.some((ignoredPath) => nextDir.startsWith(ignoredPath))) {
+        walk(nextDir, files)
+      }
       continue
     }
     if (textExts.has(extname(entry.name))) files.push(join(dir, entry.name))
