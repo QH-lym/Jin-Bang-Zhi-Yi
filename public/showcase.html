@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="晋梆智绎项目展示页，包含项目介绍、功能截图、下载入口、GitHub 链接和联系方式。" />
+    <link rel="icon" type="image/png" href="./icon.png" />
+    <link rel="canonical" href="https://jinbangzhiyi.online/showcase.html" />
+    <title>晋梆智绎项目展示</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0908;
+        --panel: #15110f;
+        --text: #fff7ea;
+        --muted: #cfc2ad;
+        --gold: #d7a83f;
+        --red: #a92420;
+        --teal: #48c7a1;
+        --line: rgba(255, 235, 190, 0.18);
+        --shadow: 0 26px 70px rgba(0, 0, 0, 0.38);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background:
+          linear-gradient(140deg, rgba(169, 36, 32, 0.3), transparent 34%),
+          linear-gradient(220deg, rgba(72, 199, 161, 0.17), transparent 38%),
+          var(--bg);
+        color: var(--text);
+        font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+        letter-spacing: 0;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 1px solid var(--line);
+        background: rgba(11, 9, 8, 0.88);
+        backdrop-filter: blur(16px);
+      }
+
+      .nav-inner {
+        width: min(1160px, calc(100% - 32px));
+        margin: 0 auto;
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .brand img {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+      }
+
+      .brand strong {
+        font-size: 18px;
+        white-space: nowrap;
+      }
+
+      .links {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .links a,
+      .button {
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 9px 13px;
+        text-decoration: none;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.2;
+      }
+
+      .button.primary {
+        border-color: transparent;
+        background: var(--red);
+        color: white;
+        font-weight: 700;
+      }
+
+      .button.secondary {
+        border-color: rgba(72, 199, 161, 0.45);
+        color: #dffdf2;
+      }
+
+      .hero {
+        width: min(1160px, calc(100% - 32px));
+        margin: 0 auto;
+        min-height: calc(100vh - 64px);
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
+        gap: 42px;
+        align-items: center;
+        padding: 58px 0 44px;
+      }
+
+      .eyebrow {
+        color: #f3d68f;
+        font-weight: 800;
+        margin: 0 0 16px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(42px, 7vw, 82px);
+        line-height: 0.98;
+      }
+
+      .lead {
+        margin: 24px 0 0;
+        color: var(--muted);
+        font-size: 19px;
+        line-height: 1.8;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 30px;
+      }
+
+      .status {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 34px;
+      }
+
+      .metric {
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+      }
+
+      .metric b {
+        display: block;
+        color: var(--teal);
+        font-size: 24px;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .hero-shot {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .hero-shot img {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+      }
+
+      .section {
+        width: min(1160px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 58px 0;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 30px;
+      }
+
+      .section-title p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+        max-width: 560px;
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .feature,
+      .contact {
+        border: 1px solid var(--line);
+        background: rgba(21, 17, 15, 0.82);
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .feature h3,
+      .contact h3 {
+        margin: 0 0 10px;
+        font-size: 18px;
+      }
+
+      .feature p,
+      .contact p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .shot {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--panel);
+      }
+
+      .shot img {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+      }
+
+      .shot figcaption {
+        padding: 12px 14px 14px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .download {
+        border: 1px solid rgba(215, 168, 63, 0.45);
+        background: linear-gradient(135deg, rgba(169, 36, 32, 0.34), rgba(21, 17, 15, 0.92));
+        padding: 28px;
+        border-radius: 8px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 22px;
+      }
+
+      .download h2 {
+        margin-bottom: 10px;
+      }
+
+      .download p {
+        color: var(--muted);
+        line-height: 1.7;
+        margin: 0;
+      }
+
+      .contacts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      footer {
+        width: min(1160px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 36px 0 46px;
+        color: rgba(255, 247, 234, 0.55);
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+      }
+
+      @media (max-width: 920px) {
+        .hero,
+        .download {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          min-height: auto;
+        }
+
+        .features,
+        .gallery,
+        .contacts,
+        .status {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .nav-inner {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 12px 0;
+        }
+
+        .links {
+          justify-content: flex-start;
+        }
+
+        .hero {
+          padding-top: 34px;
+        }
+
+        .features,
+        .gallery,
+        .contacts,
+        .status {
+          grid-template-columns: 1fr;
+        }
+
+        .section-title {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="nav-inner">
+        <a class="brand" href="./">
+          <img src="./logo.png" alt="晋梆智绎标识" />
+          <strong>晋梆智绎</strong>
+        </a>
+        <div class="links">
+          <a href="#features">功能</a>
+          <a href="#screenshots">截图</a>
+          <a href="#download">下载</a>
+          <a href="https://github.com/QH-lym/Jin-Bang-Zhi-Yi.git">GitHub</a>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">三晋非遗数字化赋能平台</p>
+          <h1>晋梆智绎</h1>
+          <p class="lead">
+            面向晋剧文化展示、课程学习、汉服租赁、文创运营和互动体验的一体化应用，
+            用 Web、桌面端、移动端和 CloudBase 云端能力，把非遗内容变成可浏览、可管理、可传播的数字服务。
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="./downloads/v1.0.0/jin-bang-zhi-yi-setup-1.0.0.exe">下载 Windows 安装包</a>
+            <a class="button secondary" href="./support.html">查看支持信息</a>
+          </div>
+          <div class="status">
+            <div class="metric"><b>Web</b><span>React + Vite</span></div>
+            <div class="metric"><b>Cloud</b><span>CloudBase 云函数</span></div>
+            <div class="metric"><b>Desktop</b><span>Electron + MSIX</span></div>
+          </div>
+        </div>
+        <div class="hero-shot">
+          <img src="./screenshots/01-login.png" alt="晋梆智绎登录与入口界面" />
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <div class="section-title">
+          <h2>核心功能</h2>
+          <p>从文化展示到实际运营，覆盖用户访问、内容管理、商品服务和云端同步。</p>
+        </div>
+        <div class="features">
+          <article class="feature">
+            <h3>晋剧演艺</h3>
+            <p>展示经典剧目、演出信息和文化介绍，适配线上传播与现场导览。</p>
+          </article>
+          <article class="feature">
+            <h3>汉服租赁</h3>
+            <p>管理款式、档期和订单流程，为活动体验和研学场景提供支持。</p>
+          </article>
+          <article class="feature">
+            <h3>文创商城</h3>
+            <p>承载非遗文创商品、库存和购买流程，让文化内容连接消费场景。</p>
+          </article>
+          <article class="feature">
+            <h3>脸谱工坊</h3>
+            <p>提供脸谱展示与互动创作体验，增强用户对晋剧视觉符号的理解。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="screenshots" class="section">
+        <div class="section-title">
+          <h2>功能截图</h2>
+          <p>以下为当前版本主要页面截图，适合用于项目汇报、应用商店资料和展示站点。</p>
+        </div>
+        <div class="gallery">
+          <figure class="shot">
+            <img src="./screenshots/02-performing-arts.png" alt="晋剧演艺页面截图" />
+            <figcaption>晋剧演艺</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="./screenshots/03-hanfu-rental.png" alt="汉服租赁页面截图" />
+            <figcaption>汉服租赁</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="./screenshots/04-cultural-shop.png" alt="文创商品页面截图" />
+            <figcaption>文创商品</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="./screenshots/05-face-workshop.png" alt="脸谱工坊页面截图" />
+            <figcaption>脸谱工坊</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="./screenshots/06-learning.png" alt="课程学习页面截图" />
+            <figcaption>课程学习</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="./screenshots/01-login.png" alt="登录入口页面截图" />
+            <figcaption>登录与入口</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="download" class="section">
+        <div class="download">
+          <div>
+            <h2>下载安装包</h2>
+            <p>Windows 安装包适用于 x64 桌面环境。若通过中国内地服务器域名访问异常，可先使用公网 IP 验证站点，再排查备案、证书和 IIS 绑定。</p>
+          </div>
+          <a class="button primary" href="./downloads/v1.0.0/jin-bang-zhi-yi-setup-1.0.0.exe">下载 EXE</a>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>项目链接与联系</h2>
+          <p>公开链接只包含站点、仓库和支持页面，不包含任何密钥或敏感凭据。</p>
+        </div>
+        <div class="contacts">
+          <article class="contact">
+            <h3>访问入口</h3>
+            <p><a href="http://118.178.109.63/">http://118.178.109.63/</a></p>
+          </article>
+          <article class="contact">
+            <h3>GitHub</h3>
+            <p><a href="https://github.com/QH-lym/Jin-Bang-Zhi-Yi.git">QH-lym/Jin-Bang-Zhi-Yi</a></p>
+          </article>
+          <article class="contact">
+            <h3>支持信息</h3>
+            <p><a href="./support.html">support.html</a></p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      © 2026 晋梆智绎。项目展示页不包含密钥、证书密码或其他敏感凭据。
+    </footer>
+  </body>
+</html>
