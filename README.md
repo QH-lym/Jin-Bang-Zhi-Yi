@@ -45,6 +45,7 @@ npm run dev              # 启动 Web 开发服务
 npm run build            # TypeScript 检查并构建 dist
 npm run preview          # 预览 dist
 npm run build:electron   # 构建 Windows 桌面安装包
+npm run build:msix       # 构建 Windows MSIX/AppX 应用包
 npm run build:android    # 构建/同步 Android 工程
 npm run check:encoding   # 检查文本编码
 ```
@@ -60,4 +61,5 @@ npm run check:encoding   # 检查文本编码
 
 - `dist/`、`release/`、`node_modules/`、`.env` 已在 `.gitignore` 中忽略。
 - 当前安装包超过 100 MB，不适合直接提交到 GitHub；如需长期版本管理，建议使用 CloudBase 静态托管、GitHub Release 或对象存储保存安装包。
+- Windows MSIX/AppX 包可通过 `npm run build:msix` 生成，产物输出到 `release/` 目录；若提交 Microsoft Store，`appx.publisher` 需替换为商店后台分配的 Publisher Identity。
 - 正式对外链接统一使用 `https://jinbangzhiyi.online/` 域名。

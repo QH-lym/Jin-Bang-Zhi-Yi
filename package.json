@@ -44,6 +44,7 @@
     "android:open": "cap open android",
     "check:encoding": "node scripts/check-encoding.mjs",
     "build:electron": "npm run build && electron-builder --publish=never",
+    "build:msix": "npm run build && electron-builder --win appx --x64 --publish=never",
     "auto:update": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/auto-update-git.ps1",
     "preview": "vite preview"
   },
@@ -65,9 +66,28 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "appx",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "public/icon.ico"
+    },
+    "appx": {
+      "identityName": "JinBangZhiYi",
+      "applicationId": "JinBangZhiYi",
+      "displayName": "晋梆智绎",
+      "publisher": "CN=JinBangZhiYi",
+      "publisherDisplayName": "晋梆智绎团队",
+      "languages": [
+        "zh-CN"
+      ],
+      "backgroundColor": "#090405",
+      "showNameOnTiles": true,
+      "setBuildNumber": true
     },
     "nsis": {
       "oneClick": false,
