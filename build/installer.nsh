@@ -1,9 +1,14 @@
 !include "FileFunc.nsh"
 !include "LogicLib.nsh"
+!include "nsDialogs.nsh"
 
 !define EXIT_APP_EXISTS 3
 !define EXIT_DISK_FULL 5
 !define EXIT_REBOOT_REQUIRED 9
+
+!ifndef BUILD_UNINSTALLER
+  Var ConfirmCheckbox
+!endif
 
 !macro exitWithCode CODE MESSAGE
   ${IfNot} ${Silent}
@@ -60,8 +65,44 @@
   ${EndIf}
 !macroend
 
+!ifndef BUILD_UNINSTALLER
+  !macro customPageAfterChangeDir
+    Page custom InstallConfirmPageCreate InstallConfirmPageLeave
+  !macroend
+
+  Function InstallConfirmPageCreate
+    nsDialogs::Create 1018
+    Pop $0
+    ${If} $0 == error
+      Abort
+    ${EndIf}
+
+    ${NSD_CreateLabel} 0 0 100% 14u "应用名称：晋梆智绎"
+    Pop $1
+    ${NSD_CreateLabel} 0 20u 100% 14u "应用版本：${VERSION}"
+    Pop $1
+    ${NSD_CreateLabel} 0 40u 100% 28u "安装路径：$INSTDIR"
+    Pop $1
+    ${NSD_CreateLabel} 0 74u 100% 28u "安装前将检查磁盘空间、重复安装和系统重启状态。确认后点击“安装”继续。"
+    Pop $1
+
+    ${NSD_CreateCheckbox} 0 112u 100% 14u "我已确认以上安装信息"
+    Pop $ConfirmCheckbox
+    ${NSD_Check} $ConfirmCheckbox
+
+    nsDialogs::Show
+  FunctionEnd
+
+  Function InstallConfirmPageLeave
+    ${NSD_GetState} $ConfirmCheckbox $0
+    ${If} $0 != ${BST_CHECKED}
+      MessageBox MB_OK|MB_ICONEXCLAMATION "请先确认安装信息。"
+      Abort
+    ${EndIf}
+  FunctionEnd
+!endif
+
 !macro customInit
-  SetSilent silent
   !insertmacro checkSameVersionInstalled HKCU
   !insertmacro checkSameVersionInstalled HKLM
   !insertmacro checkPendingReboot
