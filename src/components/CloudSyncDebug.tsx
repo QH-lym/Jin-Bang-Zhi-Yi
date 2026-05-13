@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
-import { crudApi } from '../utils/cloudFunctions'
+import { crudApi, getServerApiBase } from '../utils/cloudFunctions'
 
-const apiBase = import.meta.env.VITE_CLOUD_API_BASE ||
-  (window.location.protocol === 'file:' ? 'http://localhost:3001/api' : '/api')
+const apiBase = getServerApiBase()
 
 export const CloudSyncDebug: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([])

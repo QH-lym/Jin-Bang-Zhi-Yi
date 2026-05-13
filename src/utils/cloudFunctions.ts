@@ -1,9 +1,20 @@
-const DEFAULT_API_BASE =
-  typeof window !== 'undefined' && window.location.protocol === 'file:'
-    ? 'http://localhost:3001/api'
-    : '/api'
+function getDefaultApiBase() {
+  if (typeof window === 'undefined') return '/api'
+  if (window.location.protocol === 'file:') return 'http://localhost:3001/api'
+
+  const host = window.location.hostname
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '/api'
+
+  return 'http://118.178.109.63:3001/api'
+}
+
+const DEFAULT_API_BASE = getDefaultApiBase()
 
 const API_BASE = (import.meta.env.VITE_CLOUD_API_BASE || DEFAULT_API_BASE).replace(/\/$/, '')
+
+export function getServerApiBase() {
+  return API_BASE
+}
 
 export interface CloudFunctionResponse<T = any> {
   code: number
