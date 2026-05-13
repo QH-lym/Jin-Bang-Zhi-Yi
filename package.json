@@ -5,8 +5,6 @@
   "type": "module",
   "main": "electron/main.cjs",
   "dependencies": {
-    "@capacitor/android": "^8.3.3",
-    "@capacitor/core": "^8.3.3",
     "@cloudbase/js-sdk": "^2.28.5",
     "@types/three": "^0.184.1",
     "dexie": "^4.4.2",
@@ -18,7 +16,9 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.3.3",
     "@capacitor/cli": "^8.3.3",
+    "@capacitor/core": "^8.3.3",
     "@types/node": "^20.8.10",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
@@ -39,11 +39,12 @@
     "dev": "vite",
     "dev:electron": "concurrently \"vite\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "tsc && vite build",
+    "build:server": "npm install --prefix server && npm run build --prefix server",
     "build:android": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android.ps1",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "check:encoding": "node scripts/check-encoding.mjs",
-    "build:electron": "npm run build && electron-builder --publish=never",
+    "build:electron": "npm run build && npm run build:server && electron-builder --publish=never",
     "build:msix": "npm run build && electron-builder --win appx --x64 --publish=never",
     "auto:update": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/auto-update-git.ps1",
     "preview": "vite preview"
@@ -54,21 +55,44 @@
     "directories": {
       "output": "release"
     },
+    "artifactName": "jin-bang-zhi-yi-setup-${version}.${ext}",
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/@capacitor/android/**/*",
+      "!node_modules/@capacitor/cli/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "server/dist",
+        "to": "server/dist"
+      },
+      {
+        "from": "server/node_modules",
+        "to": "server/node_modules"
+      },
+      {
+        "from": "server/package.json",
+        "to": "server/package.json"
+      },
+      {
+        "from": "server/package-lock.json",
+        "to": "server/package-lock.json"
+      },
+      {
+        "from": "server/start-sync-server.ps1",
+        "to": "server/start-sync-server.ps1"
+      },
+      {
+        "from": "server/.env.example",
+        "to": "server/.env.example"
+      }
     ],
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "appx",
           "arch": [
             "x64"
           ]

@@ -1,4 +1,9 @@
-const API_BASE = (import.meta.env.VITE_CLOUD_API_BASE || '/api').replace(/\/$/, '')
+const DEFAULT_API_BASE =
+  typeof window !== 'undefined' && window.location.protocol === 'file:'
+    ? 'http://localhost:3001/api'
+    : '/api'
+
+const API_BASE = (import.meta.env.VITE_CLOUD_API_BASE || DEFAULT_API_BASE).replace(/\/$/, '')
 
 export interface CloudFunctionResponse<T = any> {
   code: number

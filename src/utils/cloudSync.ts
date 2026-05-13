@@ -66,9 +66,14 @@ export interface CloudUser {
 }
 
 export function getCloudSyncStatus() {
+  const defaultTarget =
+    typeof window !== 'undefined' && window.location.protocol === 'file:'
+      ? 'http://localhost:3001/api'
+      : '/api'
+
   return {
     ready: true,
-    target: import.meta.env.VITE_CLOUD_API_BASE || '/api',
+    target: import.meta.env.VITE_CLOUD_API_BASE || defaultTarget,
     provider: 'server',
   }
 }

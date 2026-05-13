@@ -4,18 +4,36 @@ $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
 
 $Port = if ($env:PORT) { $env:PORT } else { '3001' }
-$LogDir = Join-Path $Root 'logs'
+$DataDir = if ($env:SYNC_DATA_DIR) {
+  $env:SYNC_DATA_DIR
+} else {
+  Join-Path $env:LOCALAPPDATA 'JinBangZhiYi\sync-server'
+}
+$LogDir = Join-Path $DataDir 'logs'
 $OutLog = Join-Path $LogDir 'sync-server.out.log'
 $ErrLog = Join-Path $LogDir 'sync-server.err.log'
+$StorePath = if ($env:SYNC_STORE_PATH) {
+  $env:SYNC_STORE_PATH
+} else {
+  Join-Path $DataDir 'sync-store.json'
+}
 
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $Root 'data') | Out-Null
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $StorePath) | Out-Null
 
-Write-Host "Installing dependencies..."
-npm install
+if (-not (Test-Path (Join-Path $Root 'node_modules'))) {
+  Write-Host "Installing dependencies..."
+  npm install
+} else {
+  Write-Host "Dependencies already present."
+}
 
-Write-Host "Building server..."
-npm run build
+if ((Test-Path (Join-Path $Root 'src')) -and -not (Test-Path (Join-Path $Root 'dist\index.js'))) {
+  Write-Host "Building server..."
+  npm run build
+} else {
+  Write-Host "Server build already present."
+}
 
 Write-Host "Opening Windows Firewall port $Port..."
 try {
@@ -39,6 +57,7 @@ try {
 
 Write-Host "Starting sync server on port $Port..."
 $env:PORT = $Port
+$env:SYNC_STORE_PATH = $StorePath
 Start-Process -FilePath 'node' -ArgumentList @('dist/index.js') -WorkingDirectory $Root -WindowStyle Hidden -RedirectStandardOutput $OutLog -RedirectStandardError $ErrLog
 
 Start-Sleep -Seconds 3
@@ -51,4 +70,4 @@ Write-Host "Sync server is running:"
 Write-Host "  Local:  $healthUrl"
 Write-Host "  Public: http://118.178.109.63:$Port/health"
 Write-Host "Data file:"
-Write-Host "  $(Join-Path $Root 'data\sync-store.json')"
+Write-Host "  $StorePath"
