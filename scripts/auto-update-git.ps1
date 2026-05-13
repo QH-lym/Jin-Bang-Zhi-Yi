@@ -62,6 +62,65 @@ function Stop-PackagedApp {
   }
 }
 
+function Get-LatestInstaller {
+  $releaseDir = Join-Path $repoRoot "release"
+  $latestYml = Join-Path $releaseDir "latest.yml"
+
+  if (Test-Path $latestYml) {
+    $pathLine = Get-Content -LiteralPath $latestYml |
+      Where-Object { $_ -match '^\s*path:\s*(.+?)\s*$' } |
+      Select-Object -First 1
+
+    if ($pathLine -match '^\s*path:\s*(.+?)\s*$') {
+      $artifactPath = Join-Path $releaseDir $Matches[1]
+      if (Test-Path $artifactPath) {
+        return Get-Item -LiteralPath $artifactPath
+      }
+    }
+  }
+
+  return Get-ChildItem -LiteralPath $releaseDir -Filter "*.exe" -File |
+    Where-Object { $_.Name -notlike "*.blockmap" } |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+}
+
+function Get-ReleaseVersion {
+  $latestYml = Join-Path $repoRoot "release\latest.yml"
+  if (Test-Path $latestYml) {
+    $versionLine = Get-Content -LiteralPath $latestYml |
+      Where-Object { $_ -match '^\s*version:\s*(.+?)\s*$' } |
+      Select-Object -First 1
+
+    if ($versionLine -match '^\s*version:\s*(.+?)\s*$') {
+      return $Matches[1].Trim("'`" ")
+    }
+  }
+
+  return (node -p "require('./package.json').version").Trim()
+}
+
+function Sync-InstallerArtifact {
+  $installer = Get-LatestInstaller
+  if (-not $installer) {
+    throw "No installer artifact found in release."
+  }
+
+  $version = Get-ReleaseVersion
+  $downloadDir = Join-Path $repoRoot "download"
+  $publicDownloadDir = Join-Path $repoRoot "public\downloads\v$version"
+  New-Item -ItemType Directory -Force -Path $downloadDir, $publicDownloadDir | Out-Null
+
+  $trackedInstaller = Join-Path $downloadDir "晋梆智绎 Setup 1.0.0.exe"
+  $publicInstaller = Join-Path $publicDownloadDir $installer.Name
+
+  Copy-Item -LiteralPath $installer.FullName -Destination $trackedInstaller -Force
+  Copy-Item -LiteralPath $installer.FullName -Destination $publicInstaller -Force
+
+  Write-Host "Synced installer to $trackedInstaller"
+  Write-Host "Synced server download artifact to $publicInstaller"
+}
+
 function Push-WithToken {
   param(
     [string]$Url,
@@ -154,6 +213,10 @@ if ($SkipElectronBuild) {
     Stop-PackagedApp
     npm run build:electron --prefix $repoRoot
   }
+}
+
+Invoke-Step "Sync installer artifacts" {
+  Sync-InstallerArtifact
 }
 
 Invoke-Step "Stage changes" {
