@@ -1,5 +1,6 @@
 ﻿import { useState, useCallback, useEffect, useMemo, type ChangeEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import type { SyntheticEvent } from 'react'
 import { ShoppingBag, Heart, Search, Star, Plus, Minus, ChevronLeft, Edit, X, Package, Truck, ShieldCheck, CreditCard, CheckCircle } from 'lucide-react'
 import { getProducts, updateProduct, placeShopOrder } from '../data/dbStore'
 import PaymentModal from './PaymentModal'
@@ -12,10 +13,11 @@ type Product = {
 }
 
 const img = (n: number) => new URL(`../assets/products/product-${n}.svg`, import.meta.url).href
-const resolveProductImage = (image: string | undefined, id: string) => {
-  const matched = image?.match(/product-(\d+)\.svg/)
+const resolveProductImage = (image: unknown, id: string) => {
+  const imageValue = typeof image === 'string' ? image : ''
+  const matched = imageValue.match(/product-(\d+)\.svg/)
   if (matched) return img(Number(matched[1]))
-  return image || img(Number(id) || 1)
+  return imageValue || img(Number(id) || 1)
 }
 
 const products: Product[] = [
@@ -33,6 +35,42 @@ const products: Product[] = [
 const categories = ['全部', '文创周边', '手作体验', '艺术收藏', '服饰配件', '家居装饰', '家居生活', '音像制品']
 type SortType = 'default' | 'price-asc' | 'price-desc' | 'sales'
 
+function useFallbackImage(event: SyntheticEvent<HTMLImageElement>) {
+  const target = event.currentTarget
+  if (target.src !== img(1)) target.src = img(1)
+}
+
+function normalizeProduct(input: unknown, index = 0): Product {
+  const row = (input && typeof input === 'object' ? input : {}) as Partial<Product> & Record<string, unknown>
+  const fallback = products[index % products.length] || products[0]
+  const id = String(row.id || fallback.id || `product-${index}`)
+  const price = Number(row.price)
+  const originalPrice = row.originalPrice === undefined ? undefined : Number(row.originalPrice)
+  const rating = Number(row.rating)
+  const sales = Number(row.sales)
+  const rawTags = row.tags as unknown
+  const tags = Array.isArray(rawTags)
+    ? rawTags.map(String).filter(Boolean)
+    : typeof rawTags === 'string'
+      ? rawTags.split(',').map((tag: string) => tag.trim()).filter(Boolean)
+      : fallback.tags
+
+  return {
+    id,
+    name: typeof row.name === 'string' && row.name.trim() ? row.name : fallback.name,
+    category: typeof row.category === 'string' && row.category.trim() ? row.category : fallback.category,
+    price: Number.isFinite(price) && price > 0 ? price : fallback.price,
+    originalPrice: originalPrice !== undefined && Number.isFinite(originalPrice) && originalPrice > 0 ? originalPrice : fallback.originalPrice,
+    description: typeof row.description === 'string' && row.description.trim() ? row.description : fallback.description,
+    image: resolveProductImage(row.image || fallback.image, id),
+    rating: Number.isFinite(rating) && rating > 0 ? rating : fallback.rating,
+    sales: Number.isFinite(sales) && sales >= 0 ? sales : fallback.sales,
+    tags,
+    isNew: Boolean(row.isNew),
+    isHot: Boolean(row.isHot),
+  }
+}
+
 export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { currentAccount?: Account; initialQuery?: string }) {
   const isAdmin = ca?.role === 'admin'
   const [selectedCategory, setSelectedCategory] = useState('全部')
@@ -47,7 +85,10 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
   const [productList, setPL] = useState<Product[]>(() => {
   try {
     const saved = localStorage.getItem('jh_products')
-    if (saved) return (JSON.parse(saved) as Product[]).map(p => ({ ...p, image: resolveProductImage(p.image, p.id) }))
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      if (Array.isArray(parsed)) return parsed.map(normalizeProduct)
+    }
   } catch { /* ignore */ }
   return products
 })
@@ -56,7 +97,7 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
   useEffect(() => {
     getProducts().then(dbProducts => {
       if (dbProducts.length > 0) {
-        setPL(dbProducts.map(p => ({ id: p.id, name: p.name, category: p.category, price: p.price, originalPrice: p.originalPrice, description: p.description, image: resolveProductImage(p.image, p.id), rating: p.rating, sales: p.sales, tags: p.tags, isNew: p.isNew, isHot: p.isHot } as Product)))
+        setPL(dbProducts.map(normalizeProduct))
       }
     }).catch(() => {})
   }, [])
@@ -82,8 +123,9 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
   const remCart = useCallback((id: string) => setCart(p => { const n = new Map(p); const c = n.get(id) || 0; c <= 1 ? n.delete(id) : n.set(id, c - 1); return n }), [])
   const cartIds = useMemo(() => Array.from(cart.keys()), [cart])
   const totalItems = useMemo(() => Array.from(cart.values()).reduce((s, c) => s + c, 0), [cart])
-  const cartTotal = useMemo(() => cartIds.reduce((s, id) => { const p = productList.find(x => x.id === id); return s + (p ? p.price * (cart.get(id) || 0) : 0) }, 0), [cartIds, cart, productList])
-  const cartProds = useMemo(() => productList.filter(p => cart.has(p.id)), [cart, productList])
+  const safeProductList = useMemo(() => productList.map(normalizeProduct), [productList])
+  const cartTotal = useMemo(() => cartIds.reduce((s, id) => { const p = safeProductList.find(x => x.id === id); return s + (p ? p.price * (cart.get(id) || 0) : 0) }, 0), [cartIds, cart, safeProductList])
+  const cartProds = useMemo(() => safeProductList.filter(p => cart.has(p.id)), [cart, safeProductList])
   const addProduct = useCallback(() => {
     if (!newP.name.trim() || !newP.description.trim()) return
     const price = Number(newP.price)
@@ -110,19 +152,20 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
     }
   }, [editId, editVal])
   const filtered = useMemo(() => {
-    let list = productList.filter(p => (selectedCategory === '全部' || p.category === selectedCategory) && p.name.toLowerCase().includes(query.toLowerCase()))
+    let list = safeProductList
+      .filter(p => (selectedCategory === '全部' || p.category === selectedCategory) && p.name.toLowerCase().includes(query.toLowerCase()))
     if (sortBy === 'price-asc') list.sort((a, b) => a.price - b.price)
     else if (sortBy === 'price-desc') list.sort((a, b) => b.price - a.price)
     else if (sortBy === 'sales') list.sort((a, b) => b.sales - a.sales)
     return list
-  }, [productList, selectedCategory, query, sortBy])
+  }, [safeProductList, selectedCategory, query, sortBy])
 
   const closeCart = useCallback(() => { setCartOpen(false); setTimeout(() => setCartView('cart'), 300) }, [])
 
   // Persist product changes (admin edits, uploaded images) to localStorage
   useEffect(() => {
-    localStorage.setItem('jh_products', JSON.stringify(productList))
-  }, [productList])
+    localStorage.setItem('jh_products', JSON.stringify(safeProductList))
+  }, [safeProductList])
 
   const orderNo = useMemo(() => `JH${Date.now().toString(36).toUpperCase()}`, [])
 
@@ -179,7 +222,7 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
               <span>{newP.image ? '已选图片' : '选择图片'}</span>
               <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setNewP(p => ({ ...p, image: r.result as string })); r.readAsDataURL(f) } }} />
             </label>
-            {newP.image && <div className="h-12 w-12 rounded-lg overflow-hidden bg-gray-900/50"><img src={newP.image} className="h-full w-full object-cover" /></div>}
+            {newP.image && <div className="h-12 w-12 rounded-lg overflow-hidden bg-gray-900/50"><img src={newP.image} className="h-full w-full object-cover" onError={useFallbackImage} /></div>}
             {newP.image && <button onClick={() => setNewP(p => ({ ...p, image: '' }))} className="text-xs text-white/40 hover:text-red-400">清除</button>}
           </div>
         <button onClick={addProduct} disabled={!newP.name.trim() || !newP.description.trim() || !newP.price} className="w-full rounded-xl bg-amber-500/20 hover:bg-amber-500/30 py-2 text-sm font-bold text-amber-300 disabled:opacity-50">提交</button></div>}
@@ -206,7 +249,7 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
         onClick={() => setSelectedProduct(p)} className="group cursor-pointer">
         <div className="glass-panel rounded-xl overflow-hidden transition-all group-hover:scale-[1.02]">
           <div className="relative h-48 overflow-hidden bg-gray-900">
-            <img src={p.image} alt={p.name} className="h-full w-full object-cover transition-transform group-hover:scale-110" loading="lazy" />
+            <img src={p.image} alt={p.name} className="h-full w-full object-cover transition-transform group-hover:scale-110" loading="lazy" onError={useFallbackImage} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40" />
             {p.isNew && <span className="absolute top-3 left-3 rounded-lg bg-blue-500/80 px-2 py-1 text-xs font-bold text-white">新品</span>}
             {p.isHot && <span className="absolute top-3 left-3 rounded-lg bg-red-500/80 px-2 py-1 text-xs font-bold text-white">热销</span>}
@@ -223,7 +266,7 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
               {/* Preview below */}
               {editVal && (
                 <div className="relative w-full h-24 flex items-center justify-center bg-black/40 rounded-lg mb-1">
-                  <img src={editVal} alt="预览" className="max-w-full max-h-full rounded object-contain" />
+                  <img src={editVal} alt="预览" className="max-w-full max-h-full rounded object-contain" onError={useFallbackImage} />
                   <button onClick={e => { e.stopPropagation(); setEditVal('') }} className="absolute top-1 right-1 rounded-full bg-red-500/80 w-5 h-5 flex items-center justify-center text-white text-xs z-10">×</button>
                 </div>
               )}
@@ -256,7 +299,7 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
     <AnimatePresence>{selectedProduct && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setSelectedProduct(null)}>
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-2xl glass-window rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="relative h-64 overflow-hidden bg-gray-900">
-          <img src={selectedProduct.image} alt={selectedProduct.name} className="h-full w-full object-cover" />
+          <img src={selectedProduct.image} alt={selectedProduct.name} className="h-full w-full object-cover" onError={useFallbackImage} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60" />
           <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 rounded-lg bg-black/30 p-2 text-white/60 hover:text-white"><X className="h-5 w-5" /></button>
         </div>
@@ -306,7 +349,7 @@ function CartSidebar({ cartView, setCartView, closeCart, cart, cartProds, cartTo
       {cartView === 'cart' && <div className="p-6"><div className="flex justify-between mb-4"><h2 className="text-xl font-bold text-white flex items-center gap-2"><ShoppingBag className="h-5 w-5 text-amber-400" />购物车</h2>
         <button onClick={closeCart} className="rounded-lg p-2 text-white/60 hover:text-white glass-control"><X className="h-5 w-5" /></button></div>
         {cartProds.length === 0 ? <p className="py-20 text-center text-white/40">购物车是空的</p> : <>{cartProds.map(p => <div key={p.id} className="flex items-center gap-3 rounded-xl p-3 glass-control mb-2">
-          <div className="h-16 w-16 shrink-0 rounded-lg bg-gray-900/50 overflow-hidden"><img src={p.image} alt={p.name} className="h-full w-full object-cover" /></div>
+          <div className="h-16 w-16 shrink-0 rounded-lg bg-gray-900/50 overflow-hidden"><img src={p.image} alt={p.name} className="h-full w-full object-cover" onError={useFallbackImage} /></div>
           <div className="flex-1"><div className="text-sm text-white/90">{p.name}</div><div className="text-amber-400 font-bold">¥{p.price}</div></div>
           <div className="flex items-center gap-2"><button onClick={() => remCart(p.id)} className="rounded-lg p-1 text-white/60 glass-control hover:text-white"><Minus className="h-4 w-4" /></button>
             <span className="text-white w-6 text-center">{cart.get(p.id)}</span><button onClick={() => addCart(p.id)} className="rounded-lg p-1 text-white/60 glass-control hover:text-white"><Plus className="h-4 w-4" /></button></div>
@@ -317,7 +360,7 @@ function CartSidebar({ cartView, setCartView, closeCart, cart, cartProds, cartTo
       </div>}
       {cartView === 'checkout' && <div className="p-6"><div className="flex items-center gap-3 mb-4"><button onClick={() => setCartView('cart')} className="rounded-lg p-1.5 glass-control text-white/60 hover:text-white"><ChevronLeft className="h-5 w-5" /></button>
         <h2 className="text-xl font-bold text-white flex items-center gap-2"><CreditCard className="h-5 w-5 text-amber-400" />确认订单</h2></div>
-        {cartProds.map(p => <div key={p.id} className="flex items-center gap-3 py-2"><div className="h-12 w-12 shrink-0 rounded-lg bg-gray-900/50 overflow-hidden"><img src={p.image} alt={p.name} className="h-full w-full object-cover" /></div>
+        {cartProds.map(p => <div key={p.id} className="flex items-center gap-3 py-2"><div className="h-12 w-12 shrink-0 rounded-lg bg-gray-900/50 overflow-hidden"><img src={p.image} alt={p.name} className="h-full w-full object-cover" onError={useFallbackImage} /></div>
           <span className="flex-1 text-sm text-white/85">{p.name}</span><span className="text-white/50">×{cart.get(p.id)}</span><span className="text-amber-400">¥{p.price * (cart.get(p.id) || 0)}</span></div>)}
         <div className="mt-3 pt-3 border-t border-white/10 flex justify-between text-sm"><span>共{totalItems}件</span><span className="text-amber-400 font-bold">¥{cartTotal}</span></div>
         <div className="mt-4 space-y-3">{['收货人','手机号','收货地址'].map((pl, i) => <input key={pl} type={i===1?'tel':'text'} placeholder={pl} value={[recipient,phone,address][i]}

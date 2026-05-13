@@ -1,4 +1,4 @@
-import { Suspense, lazy, useMemo, useState, useCallback } from 'react'
+import { Component, Suspense, lazy, useMemo, useState, useCallback, type ErrorInfo, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight,
@@ -40,6 +40,45 @@ function ModuleFallback() {
       <div className="glass-control rounded-2xl px-5 py-3 text-sm text-white/60">正在加载模块...</div>
     </div>
   )
+}
+
+class ModuleErrorBoundary extends Component<
+  { children: ReactNode; moduleName: string },
+  { hasError: boolean; message: string }
+> {
+  state = { hasError: false, message: '' }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, message: error.message || '模块加载失败' }
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error(`[${this.props.moduleName}] render failed`, error, info)
+  }
+
+  componentDidUpdate(prevProps: { moduleName: string }) {
+    if (prevProps.moduleName !== this.props.moduleName && this.state.hasError) {
+      this.setState({ hasError: false, message: '' })
+    }
+  }
+
+  render() {
+    if (!this.state.hasError) return this.props.children
+
+    return (
+      <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-6 text-center">
+        <div className="text-sm font-bold text-red-200">{this.props.moduleName}暂时无法打开</div>
+        <div className="mt-2 text-xs text-white/50">{this.state.message}</div>
+        <button
+          type="button"
+          onClick={() => this.setState({ hasError: false, message: '' })}
+          className="mt-4 rounded-xl bg-white/10 px-4 py-2 text-sm text-white/70 hover:bg-white/15"
+        >
+          重新打开
+        </button>
+      </div>
+    )
+  }
 }
 
 type TabId = 'watch' | 'study' | 'shop' | 'course' | 'social' | 'map' | 'chat' | 'face' | 'admin'
@@ -327,18 +366,20 @@ export default function Dashboard({
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Suspense fallback={<ModuleFallback />}>
-                    {activeTab === 'watch' && <WatchPanel isAdmin={isAdmin} />}
-                    {activeTab === 'study' && <HanfuRental currentAccount={accountInfo} />}
-                    {activeTab === 'shop' && (<div className="space-y-5"><ShopPanel currentAccount={accountInfo} initialQuery={shopEntryQuery} /><SalesFlowMap /></div>)}
-                    {activeTab === 'chat' && <AIChat />}
-                    {activeTab === 'course' && <CoursePanel query={courseQuery} onQueryChange={setCourseQuery} selectedCategory={selectedCourseCategory} onCategoryChange={setSelectedCourseCategory} courses={filteredCourses} categories={courseCategories} onSelectCourse={handleSelectCourse} isAdmin={isAdmin} showAddCourse={showAddCourse} onToggleAddCourse={() => setShowAddCourse(p => !p)} newCourse={newCourse} onNewCourseChange={setNewCourse} onAddCourse={handleAddCourse} />}
-                    {activeTab === 'social' && <SocialPanel query={socialQuery} onQueryChange={setSocialQuery} posts={postsState} selectedType={selectedPostType} onTypeChange={setSelectedPostType} types={postTypes} likedPosts={likedPosts} onToggleLike={(id) => setLikedPosts(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })} onSelectPost={(p) => { setSelectedPost(p); setShowPostDetail(true) }} onPublish={handlePublishPost} onDeletePost={(id) => setPostsState(p => p.filter(x => x.id !== id))} isAdmin={isAdmin} />}
-                    {activeTab === 'map' && <OperaMap onExploreFace={handleGoToFace} />}
-                    {activeTab === 'face' && <FaceWorkshop initialTemplate={naviTemplate} onViewShop={(query) => navigateTo('shop', { shopQuery: query })} />}
-                    {activeTab === 'admin' && isAdmin && <AdminDashboard />}
-                    {activeTab === 'admin' && !isAdmin && <div className="py-20 text-center text-white/30"><Shield className="h-12 w-12 mx-auto mb-3 opacity-30" /><p className="text-sm">仅管理员可访问</p></div>}
-                  </Suspense>
+                  <ModuleErrorBoundary key={activeTab} moduleName={currentTab.title}>
+                    <Suspense fallback={<ModuleFallback />}>
+                      {activeTab === 'watch' && <WatchPanel isAdmin={isAdmin} />}
+                      {activeTab === 'study' && <HanfuRental currentAccount={accountInfo} />}
+                      {activeTab === 'shop' && (<div className="space-y-5"><ShopPanel currentAccount={accountInfo} initialQuery={shopEntryQuery} /><SalesFlowMap /></div>)}
+                      {activeTab === 'chat' && <AIChat />}
+                      {activeTab === 'course' && <CoursePanel query={courseQuery} onQueryChange={setCourseQuery} selectedCategory={selectedCourseCategory} onCategoryChange={setSelectedCourseCategory} courses={filteredCourses} categories={courseCategories} onSelectCourse={handleSelectCourse} isAdmin={isAdmin} showAddCourse={showAddCourse} onToggleAddCourse={() => setShowAddCourse(p => !p)} newCourse={newCourse} onNewCourseChange={setNewCourse} onAddCourse={handleAddCourse} />}
+                      {activeTab === 'social' && <SocialPanel query={socialQuery} onQueryChange={setSocialQuery} posts={postsState} selectedType={selectedPostType} onTypeChange={setSelectedPostType} types={postTypes} likedPosts={likedPosts} onToggleLike={(id) => setLikedPosts(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })} onSelectPost={(p) => { setSelectedPost(p); setShowPostDetail(true) }} onPublish={handlePublishPost} onDeletePost={(id) => setPostsState(p => p.filter(x => x.id !== id))} isAdmin={isAdmin} />}
+                      {activeTab === 'map' && <OperaMap onExploreFace={handleGoToFace} />}
+                      {activeTab === 'face' && <FaceWorkshop initialTemplate={naviTemplate} onViewShop={(query) => navigateTo('shop', { shopQuery: query })} />}
+                      {activeTab === 'admin' && isAdmin && <AdminDashboard />}
+                      {activeTab === 'admin' && !isAdmin && <div className="py-20 text-center text-white/30"><Shield className="h-12 w-12 mx-auto mb-3 opacity-30" /><p className="text-sm">仅管理员可访问</p></div>}
+                    </Suspense>
+                  </ModuleErrorBoundary>
                 </motion.div>
               </AnimatePresence>
             </div>
