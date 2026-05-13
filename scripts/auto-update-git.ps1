@@ -111,7 +111,10 @@ function Sync-InstallerArtifact {
   $publicDownloadDir = Join-Path $repoRoot "public\downloads\v$version"
   New-Item -ItemType Directory -Force -Path $downloadDir, $publicDownloadDir | Out-Null
 
-  $trackedInstaller = Join-Path $downloadDir "晋梆智绎 Setup 1.0.0.exe"
+  $trackedInstallerName = [Text.Encoding]::UTF8.GetString(
+    [Convert]::FromBase64String("5pmL5qKG5pm657uOIFNldHVwIDEuMC4wLmV4ZQ==")
+  )
+  $trackedInstaller = Join-Path $downloadDir $trackedInstallerName
   $publicInstaller = Join-Path $publicDownloadDir $installer.Name
 
   Copy-Item -LiteralPath $installer.FullName -Destination $trackedInstaller -Force
