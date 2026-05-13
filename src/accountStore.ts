@@ -28,6 +28,8 @@ function base64ToBytes(value: string): Uint8Array {
 }
 
 async function hashPassword(pw: string): Promise<string> {
+  if (!crypto.subtle) return legacyHashPassword(pw)
+
   const salt = crypto.getRandomValues(new Uint8Array(16))
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits'])
   const bits = await crypto.subtle.deriveBits(
@@ -40,8 +42,10 @@ async function hashPassword(pw: string): Promise<string> {
 
 async function verifyPassword(pw: string, stored: string): Promise<{ ok: boolean; needsMigration: boolean }> {
   if (!stored.startsWith(`${HASH_PREFIX}$`)) {
-    return { ok: stored === legacyHashPassword(pw), needsMigration: true }
+    return { ok: stored === legacyHashPassword(pw), needsMigration: !!crypto.subtle }
   }
+
+  if (!crypto.subtle) return { ok: false, needsMigration: false }
 
   const [, iterations, saltValue, hashValue] = stored.split('$')
   if (!iterations || !saltValue || !hashValue) return { ok: false, needsMigration: false }

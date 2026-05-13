@@ -1,19 +1,14 @@
-// ═══════════════════════════════════════════════
-//  云端同步调试组件
-// ═══════════════════════════════════════════════
-
 import React, { useState } from 'react'
+import { crudApi } from '../utils/cloudFunctions'
 
-const envId = import.meta.env.VITE_CLOUDBASE_ENV_ID || 'sjy-d0gxtaklr8e1be761'
-const region = import.meta.env.VITE_CLOUDBASE_REGION || 'ap-shanghai'
-const publishableKey = import.meta.env.VITE_TCB_PUBLISHABLE_KEY || ''
+const apiBase = import.meta.env.VITE_CLOUD_API_BASE || '/api'
 
 export const CloudSyncDebug: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
-  const addLog = (msg: string) => {
-    setLogs(prev => [...prev, `${new Date().toLocaleTimeString()} ${msg}`])
+  const addLog = (message: string) => {
+    setLogs(prev => [...prev, `${new Date().toLocaleTimeString()} ${message}`])
   }
 
   const runTest = async () => {
@@ -21,65 +16,24 @@ export const CloudSyncDebug: React.FC = () => {
     setLogs([])
 
     try {
-      // 1. 检查配置
-      addLog(`🔧 配置检查:`)
-      addLog(`  - envId: ${envId}`)
-      addLog(`  - region: ${region}`)
-      addLog(`  - publishableKey: ${publishableKey ? '已设置' : '未设置'}`)
+      addLog(`Server API: ${apiBase}`)
 
-      // 2. 动态导入 CloudBase
-      addLog(`🚀 初始化 CloudBase...`)
-      const cloudbaseSDK = await import('@cloudbase/js-sdk')
-      const cloudbase = cloudbaseSDK.default.init({
-        env: envId,
-        region,
-        accessKey: publishableKey || undefined,
-      })
-      addLog(`✅ CloudBase 初始化成功`)
+      const healthUrl = apiBase === '/api' ? '/health' : `${apiBase.replace(/\/api$/, '')}/health`
+      const health = await fetch(healthUrl).then(res => res.json())
+      addLog(`Health check: ${health.status || 'unknown'}`)
 
-      // 3. 匿名登录
-      addLog(`🔑 尝试匿名登录...`)
-      try {
-        const loginRes: any = await cloudbase.auth().anonymousAuthProvider().signIn()
-        addLog(`✅ 匿名登录成功: ${loginRes?.uid || 'unknown'}`)
-      } catch (loginErr: any) {
-        addLog(`❌ 匿名登录失败: ${loginErr.message}`)
-      }
+      const count = await crudApi.count('products')
+      addLog(`Products count: ${count.code === 0 ? count.data?.total ?? 0 : count.message}`)
 
-      // 4. 调用云函数 - count
-      addLog(`📡 调用云函数 crud (action=count)...`)
-      try {
-        const result = await cloudbase.callFunction({
-          name: 'crud',
-          data: { action: 'count', collection: 'products' }
-        })
-        addLog(`✅ 调用成功:`)
-        addLog(`  结果: ${JSON.stringify(result, null, 2)}`)
-      } catch (callErr: any) {
-        addLog(`❌ 调用失败: ${callErr.message}`)
-        addLog(`  错误详情: ${JSON.stringify(callErr, null, 2)}`)
-      }
-
-      // 5. 调用云函数 - batchCreate (测试写入)
-      addLog(`📡 调用云函数 crud (action=batchCreate)...`)
-      try {
-        const result = await cloudbase.callFunction({
-          name: 'crud',
-          data: {
-            action: 'batchCreate',
-            collection: 'products',
-            dataList: [{ name: '测试商品', price: 100, test: true }]
-          }
-        })
-        addLog(`✅ 调用成功:`)
-        addLog(`  结果: ${JSON.stringify(result, null, 2)}`)
-      } catch (callErr: any) {
-        addLog(`❌ 调用失败: ${callErr.message}`)
-        addLog(`  错误详情: ${JSON.stringify(callErr, null, 2)}`)
-      }
-
+      const batch = await crudApi.batchCreate('products', [{
+        id: `server-sync-test-${Date.now()}`,
+        name: 'Server sync test',
+        price: 100,
+        test: true,
+      }])
+      addLog(`Batch sync: ${batch.code === 0 ? 'ok' : batch.message}`)
     } catch (error: any) {
-      addLog(`💥 测试异常: ${error.message}`)
+      addLog(`Test failed: ${error.message || error}`)
     } finally {
       setLoading(false)
     }
@@ -87,7 +41,7 @@ export const CloudSyncDebug: React.FC = () => {
 
   return (
     <div style={{ padding: 20, maxWidth: 800, margin: '0 auto' }}>
-      <h2>🔧 云端同步调试</h2>
+      <h2>Server Sync Debug</h2>
       <button
         onClick={runTest}
         disabled={loading}
@@ -99,10 +53,10 @@ export const CloudSyncDebug: React.FC = () => {
           border: 'none',
           borderRadius: 8,
           cursor: loading ? 'not-allowed' : 'pointer',
-          marginBottom: 20
+          marginBottom: 20,
         }}
       >
-        {loading ? '测试中...' : '开始诊断测试'}
+        {loading ? 'Testing...' : 'Run Server Test'}
       </button>
 
       <div style={{
@@ -114,16 +68,14 @@ export const CloudSyncDebug: React.FC = () => {
         fontSize: 12,
         lineHeight: 1.6,
         maxHeight: 500,
-        overflow: 'auto'
+        overflow: 'auto',
       }}>
         {logs.length === 0 ? (
-          <div style={{ color: '#666' }}>点击按钮开始测试...</div>
+          <div style={{ color: '#666' }}>Click the button to test the server sync API.</div>
         ) : (
           logs.map((log, i) => (
             <div key={i} style={{
-              color: log.includes('❌') ? '#f87171' :
-                     log.includes('✅') ? '#4ade80' :
-                     log.includes('💥') ? '#ef4444' : '#d4d4d4'
+              color: log.includes('failed') ? '#f87171' : log.includes('ok') ? '#4ade80' : '#d4d4d4',
             }}>
               {log}
             </div>

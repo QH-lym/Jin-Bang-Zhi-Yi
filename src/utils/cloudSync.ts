@@ -1,6 +1,6 @@
-import { getDb, isCloudBaseReady, loginPromise, tcbConfig } from './cloudbase'
 import db from '../db'
 import type { DbHanfuItem, DbOrder, DbProduct, DbRentalOrder } from '../db'
+import { crudApi } from './cloudFunctions'
 
 export const CLOUD_COLLECTIONS = {
   products: 'products',
@@ -67,16 +67,10 @@ export interface CloudUser {
 
 export function getCloudSyncStatus() {
   return {
-    ready: isCloudBaseReady(),
-    env: tcbConfig.env,
-    region: tcbConfig.region,
+    ready: true,
+    target: import.meta.env.VITE_CLOUD_API_BASE || '/api',
+    provider: 'server',
   }
-}
-
-async function ensureCloudReady(): Promise<boolean> {
-  if (!isCloudBaseReady()) return false
-  await loginPromise
-  return true
 }
 
 function stripUndefined<T>(value: T): T {
@@ -99,41 +93,32 @@ export async function upsertCloudDocument<T extends { id?: string | number }>(
   id: string | number,
   data: T,
 ): Promise<boolean> {
-  try {
-    if (!(await ensureCloudReady())) return false
-    const payload = stripUndefined({
-      ...data,
-      id: data.id ?? String(id),
-      updatedAt: new Date().toISOString(),
-    })
-    await getDb().collection(collectionName).doc(docId(id)).set(payload)
-    return true
-  } catch (error) {
-    console.warn(`[CloudBase] 同步 ${collectionName}/${id} 失败:`, error)
-    return false
-  }
+  const payload = stripUndefined({
+    ...data,
+    id: data.id ?? String(id),
+    updatedAt: new Date().toISOString(),
+  })
+  const result = await crudApi.update(collectionName, docId(id), payload)
+  if (result.code === 0) return true
+
+  console.warn(`[ServerSync] Sync ${collectionName}/${id} failed:`, result.message)
+  return false
 }
 
 export async function deleteCloudDocument(collectionName: CollectionName, id: string | number): Promise<boolean> {
-  try {
-    if (!(await ensureCloudReady())) return false
-    await getDb().collection(collectionName).doc(docId(id)).remove()
-    return true
-  } catch (error) {
-    console.warn(`[CloudBase] 删除 ${collectionName}/${id} 失败:`, error)
-    return false
-  }
+  const result = await crudApi.remove(collectionName, docId(id))
+  if (result.code === 0) return true
+
+  console.warn(`[ServerSync] Delete ${collectionName}/${id} failed:`, result.message)
+  return false
 }
 
 export async function listCloudDocuments<T>(collectionName: CollectionName, limit = 300): Promise<T[]> {
-  try {
-    if (!(await ensureCloudReady())) return []
-    const result: any = await getDb().collection(collectionName).limit(limit).get()
-    return Array.isArray(result?.data) ? result.data as T[] : []
-  } catch (error) {
-    console.warn(`[CloudBase] 拉取 ${collectionName} 失败:`, error)
-    return []
-  }
+  const result = await crudApi.list<T>(collectionName, { page: 1, pageSize: limit })
+  if (result.code === 0) return result.data?.list || []
+
+  console.warn(`[ServerSync] Pull ${collectionName} failed:`, result.message)
+  return []
 }
 
 export async function syncProductToCloud(product: DbProduct): Promise<boolean> {
@@ -192,22 +177,11 @@ export async function syncDanmuToCloud(danmus: CloudDanmu[], playId = 'default')
 }
 
 export async function loadDanmuFromCloud(playId = 'default'): Promise<CloudDanmu[]> {
-  try {
-    const doc: any = await getDb().collection(CLOUD_COLLECTIONS.danmus).doc(docId(playId)).get()
-    const items = doc?.data?.items
-    if (Array.isArray(items)) return items
-  } catch {
-    // 兼容旧集合 danmu/danmu_list。
-  }
+  const result = await crudApi.get<{ items?: CloudDanmu[] }>(CLOUD_COLLECTIONS.danmus, docId(playId))
+  if (result.code === 0 && Array.isArray(result.data?.items)) return result.data.items
 
-  try {
-    const legacy: any = await getDb().collection('danmu').doc('danmu_list').get()
-    const items = legacy?.data?.items
-    return Array.isArray(items) ? items : []
-  } catch (error) {
-    console.warn('[CloudBase] 拉取弹幕失败:', error)
-    return []
-  }
+  const legacy = await crudApi.get<{ items?: CloudDanmu[] }>('danmu', 'danmu_list')
+  return Array.isArray(legacy.data?.items) ? legacy.data.items : []
 }
 
 async function pushTable<T extends { id: string }>(
@@ -252,7 +226,6 @@ export async function pullCloudDataToLocal(): Promise<Record<string, number>> {
     counts.rentalOrders = rentalOrders.length
   }
 
-  // 用户集合只同步公开资料和角色，不覆盖本地账号密码表。
   const users = await listCloudDocuments<CloudUser>(CLOUD_COLLECTIONS.users)
   counts.users = users.length
 

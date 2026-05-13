@@ -10,13 +10,10 @@ import morgan from 'morgan'
 import { cloudbaseConfig } from './config/cloudbase'
 
 // 导入路由
-import authRoutes from './routes/auth'
 import crudRoutes from './routes/crud'
-import storageRoutes from './routes/storage'
-import businessRoutes from './routes/business'
 
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3001
 
 // ─── 中间件 ─────────────────────────────────
 
@@ -38,10 +35,28 @@ app.use(express.urlencoded({ extended: true }))
 
 // ─── 路由 ───────────────────────────────────
 
-app.use('/api/auth', authRoutes)
 app.use('/api/crud', crudRoutes)
-app.use('/api/storage', storageRoutes)
-app.use('/api/business', businessRoutes)
+
+if (cloudbaseConfig.enabled) {
+  const authRoutes = require('./routes/auth').default
+  const storageRoutes = require('./routes/storage').default
+  const businessRoutes = require('./routes/business').default
+
+  app.use('/api/auth', authRoutes)
+  app.use('/api/storage', storageRoutes)
+  app.use('/api/business', businessRoutes)
+} else {
+  const cloudbaseDisabled = (_req: express.Request, res: express.Response) => {
+    res.status(503).json({
+      code: 503,
+      message: 'CloudBase legacy route is disabled. Server sync uses /api/crud.',
+    })
+  }
+
+  app.use('/api/auth', cloudbaseDisabled)
+  app.use('/api/storage', cloudbaseDisabled)
+  app.use('/api/business', cloudbaseDisabled)
+}
 
 // 健康检查
 app.get('/health', (req, res) => {

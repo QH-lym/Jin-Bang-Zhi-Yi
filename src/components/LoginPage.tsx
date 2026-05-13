@@ -91,9 +91,10 @@ export default function LoginPage({
     }
 
     setIsLoading(true)
-    await new Promise((resolve) => window.setTimeout(resolve, 600))
+    try {
+      await new Promise((resolve) => window.setTimeout(resolve, 600))
 
-    const account = await loginAccount(loginForm.username, loginForm.password)
+      const account = await loginAccount(loginForm.username, loginForm.password)
     if (account) {
       showToast(account.role === 'admin' ? '管理员登录成功' : '登录成功', 'success')
       // 同步用户数据到 CloudBase
@@ -101,6 +102,12 @@ export default function LoginPage({
       window.setTimeout(() => onLoginSuccess?.(account), 600)
     } else {
       showToast('账号或密码不正确', 'error')
+      setIsLoading(false)
+    }
+    } catch (error) {
+      console.error('Login failed:', error)
+      showToast('鐧诲綍澶辫触锛岃閲嶈瘯', 'error')
+      setIsLoading(false)
     }
   }
 

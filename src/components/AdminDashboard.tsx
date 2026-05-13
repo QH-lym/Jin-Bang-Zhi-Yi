@@ -231,7 +231,7 @@ export default function AdminDashboard() {
         </button>
         <button onClick={() => setShowSyncPanel(true)}
           className="rounded-xl px-4 py-2 text-xs font-bold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 flex items-center gap-2 mx-2">
-          📡 同步腾讯云
+          📡 同步服务器
         </button>
         {syncResult && (
           <div className="mt-3 text-left max-h-48 overflow-auto rounded-xl glass-panel p-3 text-xs space-y-1">
