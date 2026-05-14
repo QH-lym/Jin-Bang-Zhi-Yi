@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════
-//  独立后端服务入口
+//  独立后端服务入口（阿里云 OSS 存储）
 // ═══════════════════════════════════════════════
 
 import 'dotenv/config'
@@ -7,63 +7,47 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
-import { cloudbaseConfig } from './config/cloudbase'
+import path from 'path'
+import { checkOSSConfig } from './config/aliyunStore'
 
 // 导入路由
 import crudRoutes from './routes/crud'
+import uploadRoutes from './routes/upload'
 
 const app = express()
 const PORT = process.env.PORT || 3001
+const ossConfig = checkOSSConfig()
 
 // ─── 中间件 ─────────────────────────────────
 
-// 安全头
 app.use(helmet())
 
-// CORS
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   credentials: true,
 }))
 
-// 日志
 app.use(morgan('dev'))
 
-// 解析 JSON
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 
 // ─── 路由 ───────────────────────────────────
 
 app.use('/api/crud', crudRoutes)
+app.use('/api/upload', uploadRoutes)
 
-if (cloudbaseConfig.enabled) {
-  const authRoutes = require('./routes/auth').default
-  const storageRoutes = require('./routes/storage').default
-  const businessRoutes = require('./routes/business').default
-
-  app.use('/api/auth', authRoutes)
-  app.use('/api/storage', storageRoutes)
-  app.use('/api/business', businessRoutes)
-} else {
-  const cloudbaseDisabled = (_req: express.Request, res: express.Response) => {
-    res.status(503).json({
-      code: 503,
-      message: 'CloudBase legacy route is disabled. Server sync uses /api/crud.',
-    })
-  }
-
-  app.use('/api/auth', cloudbaseDisabled)
-  app.use('/api/storage', cloudbaseDisabled)
-  app.use('/api/business', cloudbaseDisabled)
-}
+// 静态文件服务（上传文件）
+const uploadsDir = path.resolve(process.cwd(), 'uploads')
+app.use('/uploads', express.static(uploadsDir))
 
 // 健康检查
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    cloudbase: cloudbaseConfig,
+    storage: ossConfig.configured ? 'oss' : 'local',
+    oss: ossConfig,
   })
 })
 
@@ -71,13 +55,12 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.json({
     name: 'SJY Server',
-    version: '1.0.0',
-    description: '独立后端服务 - 使用 Server Key 调用腾讯云 CloudBase',
+    version: '2.0.0',
+    description: '独立后端服务 - 阿里云 OSS 数据同步',
     endpoints: {
-      auth: '/api/auth',
       crud: '/api/crud',
-      storage: '/api/storage',
-      business: '/api/business',
+      upload: '/api/upload',
+      files: '/uploads/*',
       health: '/health',
     },
   })

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Camera, Key, Package, Shield, User } from 'lucide-react'
 import { Account, updateAccount, changePassword, updateAccountRole, getAccounts } from '../accountStore'
-import { loadOrders as loadRentalOrders, RentalOrder, statusConfig, loadOrdersFromDB } from '../data/hanfuData'
+import { RentalOrder, statusConfig, loadOrdersFromDB } from '../data/hanfuData'
 import { getShopOrders } from '../data/dbStore'
 
 type Tab = 'profile' | 'password' | 'orders' | 'admin'
@@ -44,15 +44,13 @@ export default function UserSettingsModal({
   }
 
   useEffect(() => {
-    // Load orders from Dexie first, localStorage fallback
+    // Load orders from Dexie (IndexedDB) — primary store
     getShopOrders(account.id).then(dbo => {
       if (dbo.length > 0) setShopOrders(dbo.map(o => ({ orderNo: o.id, items: o.items, total: o.total, createdAt: o.createdAt })))
-      else { const so = JSON.parse(localStorage.getItem('jh_orders') || '[]'); setShopOrders(so) }
-    }).catch(() => { const so = JSON.parse(localStorage.getItem('jh_orders') || '[]'); setShopOrders(so) })
+    }).catch(() => {})
     loadOrdersFromDB(account.id).then(dbr => {
       if (dbr.length > 0) setRentalOrders(dbr)
-      else setRentalOrders(loadRentalOrders())
-    }).catch(() => setRentalOrders(loadRentalOrders()))
+    }).catch(() => {})
     if (isAdmin) refreshAccountList()
   }, [isAdmin, account.id, accountsSnapshot])
 

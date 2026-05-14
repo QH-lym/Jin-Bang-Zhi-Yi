@@ -15,5 +15,5 @@
     "sourceMap": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "src/config/cloudbase.ts", "src/routes/auth.ts", "src/routes/storage.ts", "src/routes/business.ts"]
 }

@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { randomUUID } from 'crypto'
-import { getDocument, listDocuments, removeDocument, setDocument } from '../config/localStore'
+import { getDocument, listDocuments, removeDocument, setDocument } from '../config/aliyunStore'
 
 const router = Router()
 

@@ -1,4 +1,4 @@
-import { tcbConfig } from '../utils/cloudbase'
+// CloudBase 已迁移至阿里云，此文件保留仅作类型兼容
 
 type CollectionName = 'products' | 'orders' | 'rentalOrders' | 'posts' | 'hanfuItems'
 
@@ -53,9 +53,9 @@ export async function updateDocument(collection: CollectionName, docId: string, 
 /** 云端同步状态 */
 export function getCloudSyncStatus() {
   return {
-    ready: !!(HTTP_BASE && tcbConfig.env),
-    env: tcbConfig.env,
-    region: tcbConfig.region,
+    ready: !!HTTP_BASE,
+    env: 'aliyun-oss',
+    region: 'oss-cn-shanghai',
   }
 }
 

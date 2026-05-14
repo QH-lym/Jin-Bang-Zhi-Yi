@@ -1,4 +1,4 @@
-import { Component, Suspense, lazy, useMemo, useState, useCallback, type ErrorInfo, type ReactNode } from 'react'
+import { Component, Suspense, lazy, useMemo, useState, useCallback, useEffect, type ErrorInfo, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight,
@@ -181,6 +181,14 @@ export default function Dashboard({
   const [showPostDetail, setShowPostDetail] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showAdminMenu, setShowAdminMenu] = useState(false)
+  const [rentalOrderCount, setRentalOrderCount] = useState(0)
+
+  useEffect(() => {
+    // Load rental order count from Dexie instead of localStorage
+    import('../db').then(m => m.default.rentalOrders.count())
+      .then(setRentalOrderCount)
+      .catch(() => {})
+  }, [])
 
   const currentTab = tabContent[activeTab]
 
@@ -288,7 +296,7 @@ export default function Dashboard({
             <button onClick={() => setShowAdminMenu(false)}
               className="ios-touch ios-focus-ring w-full mt-3 rounded-2xl glass-control py-2 text-xs text-white/60">关闭</button>
             <div className="mt-3 pt-3 border-t border-white/10 text-xs text-white/40">
-              <span>租赁订单总数：{(() => { try { return JSON.parse(localStorage.getItem("jh_rental_orders") || "[]").length } catch { return 0 } })()} 笔</span>
+              <span>租赁订单总数：{rentalOrderCount} 笔</span>
             </div>
           </motion.div>
           </motion.div>

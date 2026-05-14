@@ -44,10 +44,14 @@
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "check:encoding": "node scripts/check-encoding.mjs",
-    "build:electron": "npm run build && npm run build:server && electron-builder --publish=never",
+    "build:electron": "npm run build && npm run build:server && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-electron.ps1",
     "build:msix": "npm run build && electron-builder --win appx --x64 --publish=never",
     "auto:update": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/auto-update-git.ps1",
-    "preview": "vite preview"
+    "sync:aliyun": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-aliyun-iis.ps1 -Build",
+    "preview": "vite preview",
+    "build:server:deploy": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-server-deploy.ps1",
+    "sync:aliyun:server": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-aliyun-server.ps1",
+    "deploy:all": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-aliyun-iis.ps1 -Build && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-server-deploy.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-aliyun-server.ps1"
   },
   "build": {
     "appId": "com.jinbang.zhiyi",
@@ -58,6 +62,9 @@
     "artifactName": "jin-bang-zhi-yi-setup-${version}.${ext}",
     "files": [
       "dist/**/*",
+      "!dist/downloads/**/*",
+      "!dist/posters/**/*",
+      "!dist/screenshots/**/*",
       "electron/**/*",
       "package.json",
       "!node_modules/@capacitor/android/**/*",

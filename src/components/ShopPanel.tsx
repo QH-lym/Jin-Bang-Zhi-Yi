@@ -6,6 +6,9 @@ import { getProducts, updateProduct, placeShopOrder } from '../data/dbStore'
 import PaymentModal from './PaymentModal'
 import type { Account } from '../accountStore'
 
+const MAX_PRODUCT_IMAGE_FILE_SIZE = 8 * 1024 * 1024
+const MAX_PRODUCT_IMAGE_DIMENSION = 1200
+
 type Product = {
   id: string; name: string; category: string; price: number; originalPrice?: number
   description: string; image: string; rating: number; sales: number
@@ -34,6 +37,48 @@ const products: Product[] = [
 
 const categories = ['全部', '文创周边', '手作体验', '艺术收藏', '服饰配件', '家居装饰', '家居生活', '音像制品']
 type SortType = 'default' | 'price-asc' | 'price-desc' | 'sales'
+
+function readAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(reader.error || new Error('图片读取失败'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function readProductImageFile(file: File): Promise<string> {
+  if (file.size > MAX_PRODUCT_IMAGE_FILE_SIZE) {
+    throw new Error('图片不能超过8MB')
+  }
+
+  if (file.type === 'image/svg+xml') {
+    return readAsDataUrl(file)
+  }
+
+  const sourceUrl = URL.createObjectURL(file)
+  try {
+    const image = new Image()
+    image.decoding = 'async'
+    image.src = sourceUrl
+    await image.decode()
+
+    const scale = Math.min(1, MAX_PRODUCT_IMAGE_DIMENSION / Math.max(image.width, image.height))
+    const width = Math.max(1, Math.round(image.width * scale))
+    const height = Math.max(1, Math.round(image.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return readAsDataUrl(file)
+    ctx.drawImage(image, 0, 0, width, height)
+    return canvas.toDataURL('image/jpeg', 0.82)
+  } finally {
+    URL.revokeObjectURL(sourceUrl)
+  }
+}
+
+// localStorage jh_products is deprecated. Products live in IndexedDB (Dexie) only.
 
 function useFallbackImage(event: SyntheticEvent<HTMLImageElement>) {
   const target = event.currentTarget
@@ -82,22 +127,14 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
   const [cartView, setCartView] = useState<'cart' | 'checkout'>('cart')
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [addedAnim, setAddedAnim] = useState<string | null>(null)
-  const [productList, setPL] = useState<Product[]>(() => {
-  try {
-    const saved = localStorage.getItem('jh_products')
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      if (Array.isArray(parsed)) return parsed.map(normalizeProduct)
-    }
-  } catch { /* ignore */ }
-  return products
-})
+  const [productList, setPL] = useState<Product[]>(() => products)
 
-  // Load from Dexie on mount
+  // Load from Dexie on mount — IndexedDB is the primary store
   useEffect(() => {
-    getProducts().then(dbProducts => {
-      if (dbProducts.length > 0) {
-        setPL(dbProducts.map(normalizeProduct))
+    getProducts().then(async dbProducts => {
+      const dbList = dbProducts.map(normalizeProduct)
+      if (dbList.length > 0) {
+        setPL(dbList)
       }
     }).catch(() => {})
   }, [])
@@ -162,22 +199,13 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
 
   const closeCart = useCallback(() => { setCartOpen(false); setTimeout(() => setCartView('cart'), 300) }, [])
 
-  // Persist product changes (admin edits, uploaded images) to localStorage
-  useEffect(() => {
-    localStorage.setItem('jh_products', JSON.stringify(safeProductList))
-  }, [safeProductList])
-
   const orderNo = useMemo(() => `JH${Date.now().toString(36).toUpperCase()}`, [])
 
   const completeOrder = useCallback((recip: string, phone: string, addr: string) => {
     const order = { orderNo, items: cartProds.map(p => ({ id: p.id, name: p.name, price: p.price, qty: cart.get(p.id) })), total: cartTotal, recip, phone, addr, createdAt: new Date().toLocaleString() }
-    // Save to Dexie as primary store
+    // Save to Dexie as primary store (IndexedDB), cloud sync handles remote
     placeShopOrder({ id: orderNo, accountId: ca?.id || 'guest', items: cartProds.map(p => ({ productId: p.id, name: p.name, price: p.price, quantity: cart.get(p.id) || 0 })), total: cartTotal, recipient: recip, phone, address: addr, status: 'paid', createdAt: new Date().toISOString() }).catch((e) => {
-      console.warn('Dexie save failed, saving to localStorage', e)
-      // Fallback to localStorage
-      const saved = JSON.parse(localStorage.getItem('jh_orders') || '[]')
-      saved.unshift(order)
-      localStorage.setItem('jh_orders', JSON.stringify(saved.slice(0, 20)))
+      console.warn('Dexie save failed:', e)
     })
     setSavedOrders(prev => [order, ...prev])
   }, [orderNo, cartProds, cartTotal, cart, ca])
@@ -220,7 +248,18 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm text-white/60 glass-control cursor-pointer hover:text-amber-400">
               <span>{newP.image ? '已选图片' : '选择图片'}</span>
-              <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setNewP(p => ({ ...p, image: r.result as string })); r.readAsDataURL(f) } }} />
+              <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                try {
+                  const image = await readProductImageFile(file)
+                  setNewP(p => ({ ...p, image }))
+                } catch (error: any) {
+                  window.alert(error.message || '图片读取失败')
+                } finally {
+                  e.currentTarget.value = ''
+                }
+              }} />
             </label>
             {newP.image && <div className="h-12 w-12 rounded-lg overflow-hidden bg-gray-900/50"><img src={newP.image} className="h-full w-full object-cover" onError={useFallbackImage} /></div>}
             {newP.image && <button onClick={() => setNewP(p => ({ ...p, image: '' }))} className="text-xs text-white/40 hover:text-red-400">清除</button>}
@@ -260,7 +299,17 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
                   className="flex-1 rounded-lg px-3 py-2 text-xs text-white bg-white/10 border border-white/15 outline-none focus:border-amber-500/50" />
                 <label className="shrink-0 inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs cursor-pointer bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium">
                   <span>📁 选文件</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; if (f.size > 5 * 1024 * 1024) { alert('图片不能超过5MB'); return } const r = new FileReader(); r.onload = () => setEditVal(r.result as string); r.readAsDataURL(f) }} />
+                  <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    try {
+                      setEditVal(await readProductImageFile(file))
+                    } catch (error: any) {
+                      window.alert(error.message || '图片读取失败')
+                    } finally {
+                      e.currentTarget.value = ''
+                    }
+                  }} />
                 </label>
               </div>
               {/* Preview below */}

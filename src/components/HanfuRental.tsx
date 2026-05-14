@@ -44,32 +44,19 @@ export default function HanfuRental({ currentAccount }: { currentAccount?: Accou
   const [showFaq, setShowFaq] = useState(false)
   const [selectedItem, setSelectedItem] = useState<HanfuItem | null>(null)
 
-  // Cart
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    try { return JSON.parse(localStorage.getItem('jh_rental_cart') || '[]') } catch { return [] }
-  })
+  // Cart — in-memory only (no localStorage, avoid quota issues)
+  const [cart, setCart] = useState<CartItem[]>([])
 
   // Orders
   const [orders, setOrders] = useState<RentalOrder[]>([])
   const [selectedOrder, setSelectedOrder] = useState<RentalOrder | null>(null)
 
-  // Admin: custom image management
-  const [hanfuItems, setHanfuItems] = useState<HanfuItem[]>(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('jh_hanfu_items') || 'null')
-      // Validate: each item must have pricePerDay (not DbHanfuItem.rentalPrice from broken seed)
-      if (saved && Array.isArray(saved) && saved.length > 0 && saved[0].pricePerDay) return (saved as HanfuItem[]).map(withGeneratedCover)
-    } catch { /* ignore */ }
-    return hanfuList.map(withGeneratedCover)
-  })
+  // Admin: custom image management — stored in IndexedDB, fallback to defaults
+  const [hanfuItems, setHanfuItems] = useState<HanfuItem[]>(() => hanfuList.map(withGeneratedCover))
   const [editImgId, setEditImgId] = useState<string | null>(null)
   const [editImgVal, setEditImgVal] = useState('')
 
-    // Persist cart
-  useEffect(() => { localStorage.setItem('jh_rental_cart', JSON.stringify(cart)) }, [cart])
-
-  // Persist hanfu items
-  useEffect(() => { localStorage.setItem('jh_hanfu_items', JSON.stringify(hanfuItems)) }, [hanfuItems])
+    // Cart is in-memory only; no localStorage persist to avoid quota issues
 
   const startEditImg = useCallback((id: string, img: string) => { setEditImgId(id); setEditImgVal(img) }, [])
   const saveEditImg = useCallback(() => {
@@ -560,8 +547,7 @@ function CheckoutView({ cart, totalFee, totalDeposit, onBack, onSuccess, current
 }) {
   const acct = currentAccount
   const [renter, setRenter] = useState<RenterInfo>(() => {
-    const saved = JSON.parse(localStorage.getItem('jh_renter_info') || 'null')
-    return { name: acct?.displayName || acct?.username || saved?.name || '', phone: saved?.phone || '', idCard: saved?.idCard || '', pickupMethod: 'store', address: saved?.address || '', notes: '' }
+    return { name: acct?.displayName || acct?.username || '', phone: '', idCard: '', pickupMethod: 'store', address: '', notes: '' }
   })
   const [selectedSlot, setSelectedSlot] = useState('10:00-12:00')
   const [agreed, setAgreed] = useState(false)
@@ -581,7 +567,7 @@ function CheckoutView({ cart, totalFee, totalDeposit, onBack, onSuccess, current
     const start = cart[0]?.rentStart || ''
     const end = cart[0]?.rentEnd || ''
     const days = calcDays(start, end)
-    localStorage.setItem('jh_renter_info', JSON.stringify({ name: renter.name, phone: renter.phone, idCard: renter.idCard, address: renter.address }))
+    // renter info saved in-memory only; no localStorage persist
     return {
       id: orderId, items: cart.map(i => ({ id: i.id, name: i.name, coverIdx: i.coverIdx, selectedSize: i.selectedSize, selectedColor: i.selectedColor, quantity: i.quantity, pricePerDay: i.pricePerDay, deposit: i.deposit, rentStart: i.rentStart, rentEnd: i.rentEnd, subtotal: i.pricePerDay * days * i.quantity })),
       renter: { ...renter }, rentStart: start, rentEnd: end, totalDays: days,
