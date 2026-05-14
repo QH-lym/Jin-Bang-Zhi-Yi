@@ -29,7 +29,6 @@ async function buildLogsFromDB() {
   const cityPool = ['浙江省杭州市', '北京市朝阳区', '广东省广州市', '四川省成都市', '上海市浦东新区', '陕西省西安市', '江苏省南京市', '湖北省武汉市', '广东省深圳市', '湖南省长沙市', '重庆市渝中区']
 
   try {
-    // 从 Dexie 读取商城订单
     const shopOrders = await db.orders.toArray()
     for (const o of shopOrders) {
       if (o.items && o.items.length > 0) {
@@ -48,7 +47,6 @@ async function buildLogsFromDB() {
   } catch { /* ignore */ }
 
   try {
-    // 从 Dexie 读取租赁订单
     const rentalOrders = await db.rentalOrders.toArray()
     for (const o of rentalOrders) {
       if (o.items && o.items.length > 0) {
@@ -85,28 +83,35 @@ const cityCoords: Record<string, { lng: number; lat: number }> = {
   '山西省太原市': { lng: 112.5489, lat: 37.8706 },
 }
 
-// 根据实际数据范围计算坐标映射
-function lngLatToCanvas(lng: number, lat: number, width: number, height: number) {
-  // 中国大致经纬度范围
-  const bounds = {
-    minLng: 73,
-    maxLng: 135,
-    minLat: 18,
-    maxLat: 54,
-  }
-  
-  // 计算投影后坐标
-  const x = ((lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * width
-  // y轴需要翻转（纬度越大越靠北，在画布上方）
-  const y = height - ((lat - bounds.minLat) / (bounds.maxLat - bounds.minLat)) * height
-  
-  return { x, y }
+// 高德地图加载
+async function loadAMap(): Promise<any> {
+  if ((window as any).AMap) return (window as any).AMap
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${import.meta.env.VITE_AMAP_KEY_1 || 'a8fa95b350347b80d35952a0354c8622'}`
+    script.async = true
+    script.onload = () => {
+      if ((window as any).AMap) {
+        resolve((window as any).AMap)
+      } else {
+        reject(new Error('AMap not loaded'))
+      }
+    }
+    script.onerror = () => reject(new Error('Failed to load AMap'))
+    document.head.appendChild(script)
+  })
 }
 
 export default function SalesFlowMap() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const mapContainer = useRef<HTMLDivElement>(null)
+  const mapInstance = useRef<any>(null)
+  const markersRef = useRef<any[]>([])
+  const polylinesRef = useRef<any[]>([])
+  const animDotsRef = useRef<any[]>([])
   const [logs, setLogs] = useState<{ id: number; city: string; goods: string; quantity: number; time: string }[]>(() => buildDefaultLogs())
   const [orderCount, setOrderCount] = useState(0)
+  const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading')
 
   // 初始化：从 Dexie 读取订单数据
   useEffect(() => {
@@ -114,24 +119,18 @@ export default function SalesFlowMap() {
     Promise.all([db.orders.count(), db.rentalOrders.count()]).then(([s, r]) => setOrderCount(s + r)).catch(() => {})
   }, [])
 
-  // 订单数据同步到 CloudBase（从 Dexie 读取）
+  // 订单数据同步到 CloudBase
   useEffect(() => {
     const syncInterval = setInterval(async () => {
       try {
         const shopOrders = await db.orders.toArray()
         const rentalOrders = await db.rentalOrders.toArray()
-        
-        for (const order of shopOrders) {
-          await syncOrderToCloud(order)
-        }
-        for (const order of rentalOrders) {
-          await syncRentalOrderToCloud(order)
-        }
+        for (const order of shopOrders) { await syncOrderToCloud(order) }
+        for (const order of rentalOrders) { await syncRentalOrderToCloud(order) }
       } catch (err) {
         console.error('订单同步到 CloudBase 失败:', err)
       }
     }, 10000)
-
     return () => clearInterval(syncInterval)
   }, [])
 
@@ -139,7 +138,6 @@ export default function SalesFlowMap() {
   useEffect(() => {
     const interval = setInterval(() => {
       setOrderCount((prev: number) => prev + 1)
-      // const newLogs = buildLogsFromOrders()
       const newLog = {
         id: Date.now(),
         city: Object.keys(cityCoords)[Math.floor(Math.random() * Object.keys(cityCoords).length)],
@@ -152,109 +150,180 @@ export default function SalesFlowMap() {
     return () => clearInterval(interval)
   }, [])
 
-  // 绘制地图
+  // 初始化高德地图 + 流向动画
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    let cancelled = false
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    ;(async () => {
+      try {
+        if (!mapContainer.current) return
 
-    const width = canvas.width
-    const height = canvas.height
+        ;(window as any)._AMapSecurityConfig = {
+          securityJsCode: import.meta.env.VITE_AMAP_SECURITY_JSCODE_1 || '3c709401bd41805fad01259802e16754',
+        }
 
-    // 清空画布
-    ctx.clearRect(0, 0, width, height)
+        const AMap = await loadAMap()
+        if (cancelled || !mapContainer.current) return
 
-    // 绘制城市坐标点
-    Object.entries(cityCoords).forEach(([city, { lng, lat }]) => {
-      const { x, y } = lngLatToCanvas(lng, lat, width, height)
-      
-      // 绘制城市点
-      ctx.beginPath()
-      ctx.arc(x, y, 4, 0, Math.PI * 2)
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
-      ctx.fill()
+        const map = new AMap.Map(mapContainer.current, {
+          zoom: 5,
+          center: [110, 32],
+          viewMode: '2D',
+          mapStyle: 'amap://styles/darkblue',
+        })
 
-      // 绘制城市名称（带背景避免重叠）
-      const label = city.replace(/省|市|区/g, '')
-      ctx.font = '11px sans-serif'
-      const textWidth = ctx.measureText(label).width
-      
-      // 绘制文字背景
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
-      ctx.fillRect(x - textWidth / 2 - 2, y - 20, textWidth + 4, 14)
-      
-      // 绘制文字
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
-      ctx.textAlign = 'center'
-      ctx.fillText(label, x, y - 10)
-    })
+        if (cancelled) { map.destroy(); return }
 
-    // 绘制发货路线和动态效果
-    const drawFlow = () => {
-      ctx.clearRect(0, 0, width, height)
+        mapInstance.current = map
+        setMapStatus('ready')
 
-      // 绘制基础地图
-      Object.entries(cityCoords).forEach(([city, { lng, lat }]) => {
-        const { x, y } = lngLatToCanvas(lng, lat, width, height)
-        
-        // 绘制城市点
-        ctx.beginPath()
-        ctx.arc(x, y, 4, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
-        ctx.fill()
+        const taiyuan = cityCoords['山西省太原市']
 
-        // 绘制城市名称（带背景避免重叠）
-        const label = city.replace(/省|市|区/g, '')
-        ctx.font = '11px sans-serif'
-        const textWidth = ctx.measureText(label).width
-        
-        // 绘制文字背景
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
-        ctx.fillRect(x - textWidth / 2 - 2, y - 20, textWidth + 4, 14)
-        
-        // 绘制文字
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
-        ctx.textAlign = 'center'
-        ctx.fillText(label, x, y - 10)
-      })
+        // 绘制城市标记
+        Object.entries(cityCoords).forEach(([city, { lng, lat }]) => {
+          const isTaiyuan = city === '山西省太原市'
+          const markerContent = isTaiyuan
+            ? `<div style="
+                width: 18px; height: 18px;
+                background: radial-gradient(circle, #fbbf24 0%, #d97706 70%);
+                border: 2px solid rgba(251,191,36,0.8);
+                border-radius: 50%;
+                box-shadow: 0 0 16px rgba(251,191,36,0.7);
+              "></div>`
+            : `<div style="
+                width: 10px; height: 10px;
+                background: radial-gradient(circle, #60a5fa 0%, #3b82f6 70%);
+                border: 1.5px solid rgba(96,165,250,0.6);
+                border-radius: 50%;
+                box-shadow: 0 0 8px rgba(59,130,246,0.5);
+              "></div>`
 
-      // 绘制发货路线（从山西省太原市出发）
-      const taiyuan = cityCoords['山西省太原市']
-      Object.entries(cityCoords).forEach(([city, { lng, lat }]) => {
-        if (city === '山西省太原市') return
+          const marker = new AMap.Marker({
+            position: [lng, lat],
+            content: markerContent,
+            offset: new AMap.Pixel(isTaiyuan ? -9 : -5, isTaiyuan ? -9 : -5),
+            zIndex: isTaiyuan ? 200 : 100,
+          })
 
-        const { x: startX, y: startY } = lngLatToCanvas(taiyuan.lng, taiyuan.lat, width, height)
-        const { x: endX, y: endY } = lngLatToCanvas(lng, lat, width, height)
+          // 城市名称标签
+          const label = city.replace(/省|市|区/g, '')
+          marker.setLabel({
+            content: `<div style="
+              color: ${isTaiyuan ? '#fbbf24' : 'rgba(255,255,255,0.85)'};
+              font-size: ${isTaiyuan ? '13px' : '11px'};
+              font-weight: ${isTaiyuan ? 'bold' : 'normal'};
+              padding: 2px 6px;
+              background: rgba(0,0,0,0.5);
+              border-radius: 4px;
+              white-space: nowrap;
+              text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            ">${isTaiyuan ? '📦 ' + label : label}</div>`,
+            direction: 'top',
+            offset: new AMap.Pixel(0, -8),
+          })
 
-        // 绘制路线
-        ctx.beginPath()
-        ctx.moveTo(startX, startY)
-        ctx.lineTo(endX, endY)
-        ctx.strokeStyle = 'rgba(255, 68, 68, 0.3)'
-        ctx.lineWidth = 1
-        ctx.stroke()
+          marker.setMap(map)
+          markersRef.current.push(marker)
+        })
 
-        // 绘制动态流向
-        const time = Date.now() / 1000
-        const progress = (time % 2) / 2
-        const currentX = startX + (endX - startX) * progress
-        const currentY = startY + (endY - startY) * progress
+        // 绘制从太原到各城市的流向线
+        Object.entries(cityCoords).forEach(([city, { lng, lat }]) => {
+          if (city === '山西省太原市') return
 
-        ctx.beginPath()
-        ctx.arc(currentX, currentY, 3, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(251, 191, 36, 0.8)'
-        ctx.fill()
-      })
+          // 底层静态线
+          const line = new AMap.Polyline({
+            path: [
+              new AMap.LngLat(taiyuan.lng, taiyuan.lat),
+              new AMap.LngLat(lng, lat),
+            ],
+            strokeColor: 'rgba(239, 68, 68, 0.25)',
+            strokeWeight: 1.5,
+            strokeStyle: 'dashed',
+            strokeDasharray: [8, 6],
+            lineJoin: 'round',
+            zIndex: 50,
+          })
+          line.setMap(map)
+          polylinesRef.current.push(line)
 
-      requestAnimationFrame(drawFlow)
-    }
+          // 动态流向点
+          const dot = new AMap.CircleMarker({
+            center: [taiyuan.lng, taiyuan.lat],
+            radius: 4,
+            fillColor: '#fbbf24',
+            fillOpacity: 0.9,
+            strokeColor: '#f59e0b',
+            strokeWeight: 1,
+            strokeOpacity: 0.6,
+            zIndex: 150,
+          })
+          dot.setMap(map)
 
-    const animationId = requestAnimationFrame(drawFlow)
+          // 动画：沿路线移动
+          const speed = 0.3 + Math.random() * 0.4 // 每条线不同速度
+          const offset = Math.random() * 2 // 随机初始偏移
+          const animate = () => {
+            if (cancelled) return
+            const t = ((Date.now() / 1000 * speed + offset) % 2) / 2
+            const curLng = taiyuan.lng + (lng - taiyuan.lng) * t
+            const curLat = taiyuan.lat + (lat - taiyuan.lat) * t
+            dot.setCenter([curLng, curLat])
+            // 接近终点时变淡
+            dot.setOptions({
+              radius: 3 + t * 2,
+              fillOpacity: 0.9 - t * 0.5,
+            })
+            requestAnimationFrame(animate)
+          }
+          requestAnimationFrame(animate)
+          animDotsRef.current.push(dot)
+        })
+
+        // 太原脉冲效果
+        const pulseMarker = new AMap.CircleMarker({
+          center: [taiyuan.lng, taiyuan.lat],
+          radius: 12,
+          fillColor: '#fbbf24',
+          fillOpacity: 0.15,
+          strokeColor: '#fbbf24',
+          strokeWeight: 1,
+          strokeOpacity: 0.3,
+          zIndex: 90,
+        })
+        pulseMarker.setMap(map)
+
+        const pulseAnimate = () => {
+          if (cancelled) return
+          const t = (Date.now() / 1000 % 2) / 2
+          pulseMarker.setOptions({
+            radius: 12 + t * 18,
+            fillOpacity: 0.15 * (1 - t),
+            strokeOpacity: 0.3 * (1 - t),
+          })
+          requestAnimationFrame(pulseAnimate)
+        }
+        requestAnimationFrame(pulseAnimate)
+
+      } catch (err: unknown) {
+        if (!cancelled) {
+          console.error('SalesFlowMap init failed:', err)
+          setMapStatus('error')
+        }
+      }
+    })()
 
     return () => {
-      cancelAnimationFrame(animationId)
+      cancelled = true
+      markersRef.current.forEach(m => { try { m.setMap(null) } catch {} })
+      polylinesRef.current.forEach(p => { try { p.setMap(null) } catch {} })
+      animDotsRef.current.forEach(d => { try { d.setMap(null) } catch {} })
+      markersRef.current = []
+      polylinesRef.current = []
+      animDotsRef.current = []
+      if (mapInstance.current) {
+        try { mapInstance.current.destroy() } catch {}
+        mapInstance.current = null
+      }
     }
   }, [])
 
@@ -262,31 +331,46 @@ export default function SalesFlowMap() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-white/70">📦 订单流向图</h3>
-        <div className="text-xs text-white/40">实时同步中</div>
+        <div className="flex items-center gap-2">
+          {mapStatus === 'loading' && <div className="text-xs text-amber-400/60 animate-pulse">地图加载中...</div>}
+          {mapStatus === 'ready' && <div className="text-xs text-emerald-400/60">实时同步中</div>}
+          {mapStatus === 'error' && <div className="text-xs text-red-400/60">地图加载失败</div>}
+        </div>
       </div>
 
       <div className="glass-panel rounded-2xl overflow-hidden relative">
-        <canvas
-          ref={canvasRef}
-          width={800}
-          height={500}
-          className="w-full bg-gradient-to-b from-slate-900 to-slate-800"
-          style={{ height: 'auto', aspectRatio: '800 / 500' }}
+        <div
+          ref={mapContainer}
+          className="w-full"
+          style={{ height: '420px', background: 'linear-gradient(135deg, #0f172a, #1e293b)' }}
         />
 
         {/* 右下角图例 */}
         <div className="absolute bottom-4 right-4 glass-panel rounded-lg p-3 z-10">
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-0.5 bg-red-500/60" />
+              <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
+              <span className="text-white/60">发货中心</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_6px_rgba(59,130,246,0.5)]" />
+              <span className="text-white/60">覆盖城市</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-0 border-t border-dashed border-red-500/40" />
               <span className="text-white/60">路线</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-0.5 bg-amber-400 relative">
-                <div className="absolute right-0 w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-              </div>
+              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               <span className="text-white/60">流向</span>
             </div>
+          </div>
+        </div>
+
+        {/* 左上角提示 */}
+        <div className="absolute top-4 left-4 z-10">
+          <div className="glass-panel rounded-lg px-3 py-2 text-xs text-white/50">
+            📦 山西太原 → 全国 12 城
           </div>
         </div>
       </div>

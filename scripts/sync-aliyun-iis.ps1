@@ -211,7 +211,7 @@ if ($DryRun) {
   exit 0
 }
 
-$manifest = @()
+$manifest = [System.Collections.ArrayList]::new()
 $totalChunks = 0
 
 Invoke-Step "Upload files through ECS Cloud Assistant" {
@@ -221,12 +221,12 @@ Invoke-Step "Upload files through ECS Cloud Assistant" {
     $bytes = [IO.File]::ReadAllBytes($file.FullName)
     $partCount = [Math]::Max(1, [Math]::Ceiling($bytes.Length / $ChunkSize))
 
-    $manifest += [pscustomobject]@{
+    [void]$manifest.Add([pscustomobject]@{
       index = $i
       relativePath = $relativePath
       parts = $partCount
       length = $bytes.Length
-    }
+    })
 
     for ($part = 0; $part -lt $partCount; $part++) {
       $offset = $part * $ChunkSize
