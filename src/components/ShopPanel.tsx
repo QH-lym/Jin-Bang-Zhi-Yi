@@ -15,10 +15,17 @@ type Product = {
   tags: string[]; isNew?: boolean; isHot?: boolean
 }
 
-const img = (n: number) => new URL(`../assets/products/product-${n}.svg`, import.meta.url).href
+const img = (n: number) => {
+  // 优先使用 png 图片，如果不存在则使用 svg
+  try {
+    return new URL(`../assets/products/product-${n}.png`, import.meta.url).href
+  } catch {
+    return new URL(`../assets/products/product-${n}.svg`, import.meta.url).href
+  }
+}
 const resolveProductImage = (image: unknown, id: string) => {
   const imageValue = typeof image === 'string' ? image : ''
-  const matched = imageValue.match(/product-(\d+)\.svg/)
+  const matched = imageValue.match(/product-(\d+)\.(svg|png|jpg|jpeg)/)
   if (matched) return img(Number(matched[1]))
   return imageValue || img(Number(id) || 1)
 }
