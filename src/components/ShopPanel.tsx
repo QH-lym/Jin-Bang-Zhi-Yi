@@ -135,7 +135,12 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
   // Load from Dexie on mount — IndexedDB is the primary store
   useEffect(() => {
     getProducts().then(async dbProducts => {
-      const dbList = dbProducts.map(normalizeProduct)
+      // 过滤掉测试数据（名称包含 "Server sync test" 或 id 包含 "server-sync-test"）
+      const filtered = dbProducts.filter(p => 
+        !p.name?.toLowerCase().includes('server sync test') && 
+        !p.id?.toLowerCase().includes('server-sync-test')
+      )
+      const dbList = filtered.map(normalizeProduct)
       if (dbList.length > 0) {
         setPL(dbList)
       }
