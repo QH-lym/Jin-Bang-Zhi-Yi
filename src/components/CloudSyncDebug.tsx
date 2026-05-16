@@ -25,13 +25,9 @@ export const CloudSyncDebug: React.FC = () => {
       const count = await crudApi.count('products')
       addLog(`Products count: ${count.code === 0 ? count.data?.total ?? 0 : count.message}`)
 
-      const batch = await crudApi.batchCreate('products', [{
-        id: `server-sync-test-${Date.now()}`,
-        name: 'Server sync test',
-        price: 100,
-        test: true,
-      }])
-      addLog(`Batch sync: ${batch.code === 0 ? 'ok' : batch.message}`)
+      // 测试查询功能（不再创建测试数据）
+      const list = await crudApi.list('products', { pageSize: 1 })
+      addLog(`List test: ${list.code === 0 ? 'ok' : list.message}`)
     } catch (error: any) {
       addLog(`Test failed: ${error.message || error}`)
     } finally {

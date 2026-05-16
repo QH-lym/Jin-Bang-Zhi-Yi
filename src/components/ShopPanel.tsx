@@ -16,12 +16,8 @@ type Product = {
 }
 
 const img = (n: number) => {
-  // 优先使用 png 图片，如果不存在则使用 svg
-  try {
-    return new URL(`../assets/products/product-${n}.png`, import.meta.url).href
-  } catch {
-    return new URL(`../assets/products/product-${n}.svg`, import.meta.url).href
-  }
+  // 使用 svg 图片（product-1.svg 到 product-9.svg）
+  return new URL(`../assets/products/product-${n}.svg`, import.meta.url).href
 }
 const resolveProductImage = (image: unknown, id: string) => {
   const imageValue = typeof image === 'string' ? image : ''
