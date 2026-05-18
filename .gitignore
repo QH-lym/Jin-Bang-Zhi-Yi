@@ -6,13 +6,17 @@ node_modules/
 
 # Build output
 dist/
+dist-deploy.zip
 release/
+build/
 build/iis/
+download/
 public/downloads/
 android/.gradle/
 android/build/
 android/app/build/
 android/app/src/main/assets/public/
+android/captures/
 *.apk
 
 # Environment files
