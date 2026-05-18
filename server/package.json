@@ -15,6 +15,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "helmet": "^7.1.0",
+    "jin-bang-zhi-yi": "file:..",
     "morgan": "^1.10.0",
     "multer": "^2.1.1"
   },

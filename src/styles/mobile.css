@@ -157,6 +157,7 @@
     left: 0 !important;
     right: 0 !important;
     background: rgba(15,23,42,0.95) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border-top: 1px solid rgba(255,255,255,0.1) !important;
     padding: 0.5rem !important;

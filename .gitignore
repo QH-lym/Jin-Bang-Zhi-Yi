@@ -12,6 +12,8 @@ build/
 build/iis/
 download/
 public/downloads/
+deploy/*.zip
+server/deploy/*.zip
 android/.gradle/
 android/build/
 android/app/build/

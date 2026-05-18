@@ -50,6 +50,7 @@ body,
 .app-shell {
   display: flex;
   flex-direction: column;
+  height: 100vh;
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
@@ -239,6 +240,7 @@ body,
       linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
       repeating-linear-gradient(135deg, rgba(244, 196, 106, 0.035) 0 1px, transparent 1px 18px);
     background-size: 44px 44px, 44px 44px, 28px 28px;
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 78%);
     mask-image: linear-gradient(to bottom, black, transparent 78%);
   }
 
@@ -404,6 +406,7 @@ body,
     background-image:
       repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 18px),
       repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 22px);
+    -webkit-mask-image: radial-gradient(circle at 50% 42%, black 0 48%, transparent 78%);
     mask-image: radial-gradient(circle at 50% 42%, black 0 48%, transparent 78%);
     opacity: 0.52;
   }
@@ -653,6 +656,7 @@ button {
     left: 0 !important;
     right: 0 !important;
     background: rgba(15,23,42,0.95) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
     backdrop-filter: blur(10px) !important;
     border-top: 1px solid rgba(255,255,255,0.1) !important;
     padding: 0.5rem !important;

@@ -5,7 +5,7 @@ function getDefaultApiBase() {
   const host = window.location.hostname
   if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '/api'
 
-  return 'http://118.178.109.63:3001/api'
+  return '/api'
 }
 
 const DEFAULT_API_BASE = getDefaultApiBase()

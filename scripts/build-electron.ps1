@@ -1,13 +1,13 @@
 # Build Electron app with minimal output size
 
 $ErrorActionPreference = 'Stop'
-$serverDir = Join-Path $PSScriptRoot '..' 'server'
+$serverDir = [System.IO.Path]::Combine($PSScriptRoot, '..', 'server')
 
 Write-Host "[build-electron] Optimizing server node_modules for production..."
 
 # Save full node_modules, install production-only, run builder, restore
-$fullDir = Join-Path $serverDir 'node_modules.full'
-$prodDir = Join-Path $serverDir 'node_modules'
+$fullDir = [System.IO.Path]::Combine($serverDir, 'node_modules.full')
+$prodDir = [System.IO.Path]::Combine($serverDir, 'node_modules')
 
 if (Test-Path $prodDir) {
     Rename-Item -Path $prodDir -NewName 'node_modules.full' -Force

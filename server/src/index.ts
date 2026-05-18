@@ -8,6 +8,8 @@ import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import path from 'path'
+import fs from 'fs'
+import https from 'https'
 import { checkOSSConfig } from './config/aliyunStore'
 
 // 导入路由
@@ -85,12 +87,38 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 app.listen(PORT, () => {
   console.log(`\n🚀 服务器已启动`)
-  console.log(`   地址: http://localhost:${PORT}`)
+  console.log(`   HTTP 地址: http://localhost:${PORT}`)
   console.log(`   环境: ${process.env.NODE_ENV || 'development'}`)
   console.log(`\n📚 API 文档:`)
   console.log(`   http://localhost:${PORT}/`)
   console.log(`   http://localhost:${PORT}/health`)
   console.log()
 })
+
+// ─── HTTPS 启动（使用已安装的 SSL 证书）─────────────────────────────
+
+const HTTPS_PORT = process.env.HTTPS_PORT || 3002
+const SSL_CERT = process.env.SSL_CERT || ''
+const SSL_KEY = process.env.SSL_KEY || ''
+
+if (SSL_CERT && SSL_KEY && fs.existsSync(SSL_CERT) && fs.existsSync(SSL_KEY)) {
+  const sslOptions = {
+    key: fs.readFileSync(SSL_KEY),
+    cert: fs.readFileSync(SSL_CERT),
+  }
+  https.createServer(sslOptions, app).listen(HTTPS_PORT, () => {
+    console.log(`\n🔒 HTTPS 服务器已启动`)
+    console.log(`   HTTPS 地址: https://localhost:${HTTPS_PORT}`)
+    console.log(`   证书: ${SSL_CERT}`)
+    console.log()
+  })
+} else {
+  console.log(`\n⚠️  未配置 SSL 证书，HTTPS 未启用`)
+  console.log(`   设置环境变量 SSL_CERT 和 SSL_KEY 以启用 HTTPS`)
+  console.log(`   示例:`)
+  console.log(`   SSL_CERT=C:\\inetpub\\wwwroot\\cert\\cert.pem`)
+  console.log(`   SSL_KEY=C:\\inetpub\\wwwroot\\cert\\privkey.pem`)
+  console.log()
+}
 
 export default app

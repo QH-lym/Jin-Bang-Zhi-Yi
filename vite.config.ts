@@ -35,6 +35,7 @@ export default defineConfig({
     },
   },
   build: {
+    target: 'es2020',
     // 启用 CSS 代码分割
     cssCodeSplit: true,
     // 减小 chunk 大小警告阈值
