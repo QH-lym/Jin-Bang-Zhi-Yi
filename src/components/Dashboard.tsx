@@ -34,6 +34,27 @@ const WatchPanel = lazy(() => import('./WatchPanel'))
 const UserSettingsModal = lazy(() => import('./UserSettingsModal'))
 const logoUrl = `${import.meta.env.BASE_URL}logo.png`
 
+// 模块预加载映射表
+const modulePreloadMap: Record<TabId, () => Promise<unknown>> = {
+  watch: () => import('./WatchPanel'),
+  study: () => import('./HanfuRental'),
+  shop: () => import('./ShopPanel'),
+  course: () => Promise.resolve(), // 内联组件，无需预加载
+  social: () => Promise.resolve(), // 内联组件，无需预加载
+  map: () => import('./OperaMap'),
+  chat: () => import('./AIChat'),
+  face: () => import('./FaceWorkshop'),
+  admin: () => import('./AdminDashboard'),
+}
+
+// 预加载函数
+function preloadModule(tabId: TabId) {
+  const preloadFn = modulePreloadMap[tabId]
+  if (preloadFn) {
+    preloadFn().catch(() => {}) // 静默处理预加载错误
+  }
+}
+
 function ModuleFallback() {
   return (
     <div className="flex min-h-[18rem] items-center justify-center">
@@ -201,6 +222,27 @@ export default function Dashboard({
     setRecentActions(prev => [tabContent[tab].title.replace('区', '').replace('馆', '').replace('市集', ''), ...prev].slice(0, 3))
   }, [])
 
+  // 智能预加载：当 activeTab 变化后，预加载相邻模块
+  useEffect(() => {
+    const tabOrder: TabId[] = ['watch', 'study', 'shop', 'course', 'social', 'map', 'chat', 'face']
+    const currentIndex = tabOrder.indexOf(activeTab)
+    if (currentIndex === -1) return
+    
+    // 延迟 2 秒后预加载相邻模块（避免影响当前模块加载）
+    const timer = setTimeout(() => {
+      // 预加载前一个模块
+      if (currentIndex > 0) {
+        preloadModule(tabOrder[currentIndex - 1])
+      }
+      // 预加载后一个模块
+      if (currentIndex < tabOrder.length - 1) {
+        preloadModule(tabOrder[currentIndex + 1])
+      }
+    }, 2000)
+    
+    return () => clearTimeout(timer)
+  }, [activeTab])
+
   const handleGoToFace = useCallback((templateId: string) => navigateTo('face', { faceTemplate: templateId }), [navigateTo])
 
   const handleSmartSearch = useCallback(() => {
@@ -306,7 +348,11 @@ export default function Dashboard({
       {/* Mobile Bottom Nav */}
       <nav className="fixed z-40 flex justify-around ios-tabbar px-1 py-1 lg:hidden">
         {menuItems.filter(item => item.id !== 'admin' || isAdmin).map(item => (
-          <button key={item.id} onClick={() => navigateTo(item.id)}
+          <button 
+            key={item.id} 
+            onClick={() => navigateTo(item.id)}
+            onMouseEnter={() => preloadModule(item.id)}
+            onTouchStart={() => preloadModule(item.id)}
             className={`ios-touch ios-focus-ring flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl text-[10px] transition-all ${activeTab === item.id ? 'nav-active' : 'text-white/48 hover:text-white/80 hover:bg-white/[0.06]'}`}>
             <item.icon className="h-4 w-4" />
             <span>{item.label}</span>
@@ -320,7 +366,10 @@ export default function Dashboard({
         <aside className="ios-sidebar hidden lg:flex lg:w-56 lg:flex-col lg:overflow-y-auto text-white">
           <nav className="flex-1 px-3 pt-5 space-y-1">
             {menuItems.filter(item => item.id !== 'admin' || isAdmin).map(item => (
-              <button key={item.id} onClick={() => navigateTo(item.id)}
+              <button 
+                key={item.id} 
+                onClick={() => navigateTo(item.id)}
+                onMouseEnter={() => preloadModule(item.id)}
                 className={`ios-touch ios-focus-ring flex items-center gap-3 w-full rounded-2xl px-4 py-3 text-sm font-medium transition-all ${activeTab === item.id ? 'nav-active' : 'text-white/[0.52] hover:text-white/[0.86] hover:bg-white/[0.07]'}`}>
                 <item.icon className="h-5 w-5" />
                 <span>{item.label}</span>
