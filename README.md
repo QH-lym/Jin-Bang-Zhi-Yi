@@ -1,6 +1,6 @@
 # 晋梆智绎
 
-晋梆智绎是面向晋剧与三晋非遗场景的数字化展示与互动平台，覆盖文化展示、剧目导览、课程学习、汉服租赁、文创商品、脸谱体验、AI 问答和云端同步等能力。项目同时支持 Web、Windows 桌面端和 Android 端，适合用于非遗文化传播、场馆展示、研学课程和运营管理。
+晋梆智绎是面向晋剧与三晋非遗场景的数字化展示与互动平台，覆盖文化展示、剧目导览、课程学习、戏服租赁、文创商品、脸谱体验和 AI 问答等能力。项目同时支持 Web、Windows 桌面端和 Android 端，适合用于非遗文化传播、场馆展示、研学课程和运营管理。
 
 ## 技术栈
 
@@ -9,7 +9,7 @@
 | Web 前端 | React 18、TypeScript、Vite、Tailwind CSS、Framer Motion |
 | 互动渲染 | Three.js、Canvas、响应式移动端适配 |
 | 本地数据 | Dexie / IndexedDB |
-| 云端能力 | 腾讯云 CloudBase、云函数、云数据库、云存储 |
+| 数据存储 | Dexie / IndexedDB 本地存储、Express 文件上传服务 |
 | 桌面端 | Electron、electron-builder、NSIS、MSIX/AppX |
 | 移动端 | Capacitor Android |
 | 服务端 | Node.js / Express 独立服务 |
@@ -44,7 +44,7 @@
 | --- | --- |
 | 登录与入口 | `public/screenshots/01-login.png` |
 | 晋剧演艺 | `public/screenshots/02-performing-arts.png` |
-| 汉服租赁 | `public/screenshots/03-hanfu-rental.png` |
+| 戏服租赁 | `public/screenshots/03-hanfu-rental.png` |
 | 文创商品 | `public/screenshots/04-cultural-shop.png` |
 | 脸谱工坊 | `public/screenshots/05-face-workshop.png` |
 | 课程学习 | `public/screenshots/06-learning.png` |
@@ -110,7 +110,7 @@ NSIS 安装包和 MSIX/AppX 包会输出到 `release/` 目录。MSIX/AppX 对外
 | 项目名称 | 晋梆智绎 |
 | 服务地址 | `https://jinbangzhiyi.online/` |
 | 支持页面 | `https://jinbangzhiyi.online/support.html` |
-| 技术支持 | 腾讯云 CloudBase |
+| 技术支持 | 本地 IndexedDB 与 Express 服务 |
 
 ## 安全说明
 

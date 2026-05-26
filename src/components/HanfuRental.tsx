@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect, useCallback, type ChangeEvent } from 'react'
+﻿import { useState, useMemo, useEffect, useCallback, type ChangeEvent, type CSSProperties } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, ShoppingBag, Plus, Minus, ChevronLeft, CheckCircle, Clock3, Edit } from 'lucide-react'
 import PaymentModal from './PaymentModal'
@@ -25,7 +25,21 @@ type ViewState = 'list' | 'detail' | 'cart' | 'checkout' | 'orders' | 'order-det
 
 // ─── Helper ───
 const genOrderId = () => 'HFR' + Date.now().toString(36).toUpperCase()
-const hanfuCover = (id: string) => new URL(`../assets/hanfu/hanfu-${id.replace('h', '')}.svg`, import.meta.url).href
+const generatedAsset = (name: string) => `${import.meta.env.BASE_URL}generated/${name}`
+const hanfuCover = (id: string) => {
+  const index = ((Math.max(1, Number(id.replace(/\D/g, '')) || 1) - 1) % 12) + 1
+  return generatedAsset(`hanfu-${index}.jpg`)
+}
+const costumeHeroStyle = {
+  backgroundImage: `linear-gradient(110deg, rgba(15, 5, 8, 0.78), rgba(92, 28, 20, 0.58) 44%, rgba(15, 5, 8, 0.82)), url("${generatedAsset('costume-rental-hero.jpg')}")`,
+  backgroundPosition: 'center',
+  backgroundSize: 'cover',
+} satisfies CSSProperties
+const coverImagePositions = ['18% 50%', '34% 52%', '52% 48%', '74% 46%', '88% 50%', '62% 68%', '28% 32%', '80% 64%', '45% 58%', '12% 48%', '70% 36%', '55% 72%']
+const coverObjectPosition = (id: string) => {
+  const index = Math.max(1, Number(id.replace(/\D/g, '')) || 1) - 1
+  return coverImagePositions[index % coverImagePositions.length]
+}
 const withGeneratedCover = (item: HanfuItem): HanfuItem => item.coverUrl ? item : { ...item, coverUrl: hanfuCover(item.id) }
 
 function CoverImg({ coverUrl, className, emojiSize }: { coverUrl?: string; className?: string; emojiSize?: string }) {
@@ -136,7 +150,7 @@ export default function HanfuRental({ currentAccount }: { currentAccount?: Accou
           <input
             value={query}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
-            placeholder="搜索汉服款式..."
+            placeholder="搜索戏服款式..."
             className="w-full rounded-2xl pl-12 pr-4 py-3 text-white outline-none placeholder-white/40 glass-control focus:border-amber-500/50"
           />
         </div>
@@ -155,13 +169,13 @@ export default function HanfuRental({ currentAccount }: { currentAccount?: Accou
       {view === 'list' && (
         <>
           {/* Hero Banner */}
-          <div className="hanfu-hero relative rounded-2xl overflow-hidden p-6 md:p-10 text-center border border-amber-200/15">
+          <div className="hanfu-hero relative rounded-2xl overflow-hidden p-6 md:p-10 text-center border border-amber-200/15" style={costumeHeroStyle}>
             <div className="relative z-10">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[1.4rem] border border-amber-100/25 bg-white/10 shadow-2xl shadow-amber-500/20 backdrop-blur-xl">
                 <span className="text-4xl">👘</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">汉服租赁馆</h1>
-              <p className="text-sm text-white/60 mb-3">唐制 · 宋制 · 明制 · 晋制 · 魏晋 | 多款汉服可选，到店免费试穿</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">戏服租赁馆</h1>
+              <p className="text-sm text-white/60 mb-3">青衣 · 花旦 · 老生 · 武生 · 净角 | 多款晋剧戏服可选，到店免费试穿</p>
               <div className="flex justify-center gap-3 text-xs text-white/40">
                 <span className="flex items-center gap-1"><Clock3 className="h-3.5 w-3.5" />租金 ¥58/天起</span>
                 <span className="flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5" />押金可退</span>
@@ -207,7 +221,7 @@ export default function HanfuRental({ currentAccount }: { currentAccount?: Accou
                 onClick={() => { setSelectedItem(item); setView('detail') }} className="group cursor-pointer">
                 <div className="glass-panel rounded-2xl overflow-hidden transition-all group-hover:scale-[1.02]">
                   <div className="relative h-48 flex items-center justify-center" style={{ background: item.coverUrl ? 'transparent' : coverGradient(item.coverIdx) }}>
-                    {item.coverUrl ? <img src={item.coverUrl} alt={item.name} className="w-full h-full object-cover" /> : <span className="text-6xl" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>👘</span>}
+                    {item.coverUrl ? <img src={item.coverUrl} alt={item.name} className="w-full h-full object-cover" style={{ objectPosition: coverObjectPosition(item.id) }} /> : <span className="text-6xl" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>👘</span>}
                     {/* Admin edit overlay */}
                     {isAdmin && editImgId === item.id ? (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/92 backdrop-blur-sm gap-2 p-3 z-20" onClick={e => e.stopPropagation()}>
@@ -268,7 +282,7 @@ export default function HanfuRental({ currentAccount }: { currentAccount?: Accou
               </motion.div>
             ))}
           </div>
-          {filteredList.length === 0 && <div className="py-20 text-center text-white/40"><Search className="h-12 w-12 mx-auto mb-4 opacity-30" /><p>暂无匹配汉服</p></div>}
+          {filteredList.length === 0 && <div className="py-20 text-center text-white/40"><Search className="h-12 w-12 mx-auto mb-4 opacity-30" /><p>暂无匹配戏服</p></div>}
         </>
       )}
 
@@ -362,7 +376,7 @@ function DetailView({ item, onBack, onAddToCart, onGoCart }: {
 
       <div className="glass-panel rounded-2xl overflow-hidden">
         <div className="h-64 flex items-center justify-center relative" style={{ background: item.coverUrl ? 'transparent' : coverGradient(item.coverIdx) }}>
-          {item.coverUrl ? <img src={item.coverUrl} alt={item.name} className="w-full h-full object-cover" /> : <span className="text-7xl" style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.4))' }}>👘</span>}
+          {item.coverUrl ? <img src={item.coverUrl} alt={item.name} className="w-full h-full object-cover" style={{ objectPosition: coverObjectPosition(item.id) }} /> : <span className="text-7xl" style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.4))' }}>👘</span>}
         </div>
         <div className="p-5">
           <div className="flex gap-2 mb-2">
@@ -697,7 +711,7 @@ function CheckoutView({ cart, totalFee, totalDeposit, onBack, onSuccess, current
       {/* 协议 */}
       <label className="flex items-center gap-2 text-sm text-white/60 cursor-pointer">
         <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="rounded accent-amber-500" />
-        <span>我已阅读并同意 <span className="text-amber-400 underline cursor-pointer" onClick={e => { e.preventDefault(); setShowTerms(true) }}>《汉服租赁协议》</span></span>
+        <span>我已阅读并同意 <span className="text-amber-400 underline cursor-pointer" onClick={e => { e.preventDefault(); setShowTerms(true) }}>《戏服租赁协议》</span></span>
       </label>
 
       {/* Terms Modal */}
@@ -706,7 +720,7 @@ function CheckoutView({ cart, totalFee, totalDeposit, onBack, onSuccess, current
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setShowTerms(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
               className="w-full max-w-sm rounded-2xl p-6 glass-window" onClick={e => e.stopPropagation()}>
-              <h3 className="text-lg font-bold text-white mb-3">📋 汉服租赁协议</h3>
+              <h3 className="text-lg font-bold text-white mb-3">📋 戏服租赁协议</h3>
               <div className="space-y-2 text-sm text-white/60">
                 <p>1. 租客需提供真实身份信息进行实名登记。</p>
                 <p>2. 租赁期间请爱惜衣物，避免污损、撕裂、染色等损坏。</p>

@@ -133,18 +133,18 @@ const products = [
 ]
 
 const hanfu = [
-  ['hanfu-1.svg', { title: '齐胸襦裙', subtitle: '唐制 · 牡丹红', accent: '#c2410c', secondary: '#facc15', shape: 'female' }],
-  ['hanfu-2.svg', { title: '圆领袍', subtitle: '唐制 · 玄青', accent: '#1f2937', secondary: '#2563eb', shape: 'male' }],
-  ['hanfu-3.svg', { title: '褙子套装', subtitle: '宋制 · 藕荷', accent: '#a78bfa', secondary: '#e9d5ff', shape: 'female' }],
-  ['hanfu-4.svg', { title: '明制道袍', subtitle: '茶褐 · 竹青', accent: '#8b6f4e', secondary: '#6b8a4e', shape: 'male' }],
-  ['hanfu-5.svg', { title: '马面裙套装', subtitle: '明制 · 凤穿牡丹', accent: '#1d4ed8', secondary: '#991b1b', shape: 'female' }],
-  ['hanfu-6.svg', { title: '飞鱼服', subtitle: '明制 · 绯红', accent: '#991b1b', secondary: '#111827', shape: 'male' }],
-  ['hanfu-7.svg', { title: '袒领襦裙', subtitle: '唐制 · 葡萄紫', accent: '#7e22ce', secondary: '#eab308', shape: 'female' }],
-  ['hanfu-8.svg', { title: '直裾深衣', subtitle: '晋制 · 玄纁', accent: '#374151', secondary: '#7f1d1d', shape: 'cloak' }],
-  ['hanfu-9.svg', { title: '诃子裙', subtitle: '唐制 · 天水碧', accent: '#0f766e', secondary: '#f9a8d4', shape: 'female' }],
-  ['hanfu-10.svg', { title: '魏晋大袖', subtitle: '月华白 · 仙气写真', accent: '#e5e7eb', secondary: '#94a3b8', shape: 'cloak' }],
-  ['hanfu-11.svg', { title: '宋制圆领衫', subtitle: '竹青 · 男款', accent: '#166534', secondary: '#d9f99d', shape: 'male' }],
-  ['hanfu-12.svg', { title: '晋制对襟裙', subtitle: '杏子黄 · 清雅', accent: '#d97706', secondary: '#fef3c7', shape: 'female' }],
+  ['hanfu-1.svg', { title: '青衣水袖', subtitle: '月白 · 水袖', accent: '#2563eb', secondary: '#e0f2fe', shape: 'female' }],
+  ['hanfu-2.svg', { title: '花旦短袄', subtitle: '桃花粉 · 柳绿', accent: '#db2777', secondary: '#84cc16', shape: 'female' }],
+  ['hanfu-3.svg', { title: '老生褶子', subtitle: '玄青 · 月白', accent: '#1f2937', secondary: '#e5e7eb', shape: 'male' }],
+  ['hanfu-4.svg', { title: '武生靠衣', subtitle: '赤金 · 靛蓝', accent: '#b45309', secondary: '#1d4ed8', shape: 'male' }],
+  ['hanfu-5.svg', { title: '公主蟒袍', subtitle: '旦角 · 凤穿牡丹', accent: '#1d4ed8', secondary: '#991b1b', shape: 'female' }],
+  ['hanfu-6.svg', { title: '净角蟒袍', subtitle: '绯红 · 玄黑', accent: '#991b1b', secondary: '#111827', shape: 'male' }],
+  ['hanfu-7.svg', { title: '小生帔衣', subtitle: '葡萄紫 · 琥珀黄', accent: '#7e22ce', secondary: '#eab308', shape: 'male' }],
+  ['hanfu-8.svg', { title: '丑角茶衣', subtitle: '玄纁 · 经典', accent: '#374151', secondary: '#7f1d1d', shape: 'cloak' }],
+  ['hanfu-9.svg', { title: '花旦云肩', subtitle: '天水碧 · 胭脂粉', accent: '#0f766e', secondary: '#f9a8d4', shape: 'female' }],
+  ['hanfu-10.svg', { title: '水袖练功衣', subtitle: '月华白 · 初学', accent: '#e5e7eb', secondary: '#94a3b8', shape: 'cloak' }],
+  ['hanfu-11.svg', { title: '老生圆领衫', subtitle: '竹青 · 男款', accent: '#166534', secondary: '#d9f99d', shape: 'male' }],
+  ['hanfu-12.svg', { title: '晋剧彩裙', subtitle: '杏子黄 · 旦角', accent: '#d97706', secondary: '#fef3c7', shape: 'female' }],
 ]
 
 const plays = [

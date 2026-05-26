@@ -6,14 +6,18 @@ node_modules/
 
 # Build output
 dist/
+dist.zip
 dist-deploy.zip
+release.zip
 release/
+.codex-artifacts/
 build/
 build/iis/
 download/
 public/downloads/
 deploy/*.zip
 server/deploy/*.zip
+store-screenshots/
 android/.gradle/
 android/build/
 android/app/build/

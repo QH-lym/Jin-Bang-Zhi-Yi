@@ -68,18 +68,18 @@ export const statusConfig: Record<RentalStatus, { label: string; color: string }
 }
 
 export const hanfuList: HanfuItem[] = [
-  { id: 'h1', name: '齐胸襦裙 · 石榴红', style: '唐制', coverIdx: 1, pricePerDay: 68, deposit: 200, stock: 5, sales: 168, sizes: ['S','M','L','XL'], colors: ['石榴红','碧蓝色'], gender: '女', tags: ['热门','唐制','女装'], desc: '唐制齐胸襦裙，仿敦煌壁画配色，面料为提花锦缎，裙摆三米摆，行走飘逸如仙。配披帛一条。' },
-  { id: 'h2', name: '圆领袍 · 玄青色', style: '唐制', coverIdx: 2, pricePerDay: 58, deposit: 150, stock: 8, sales: 142, sizes: ['M','L','XL','XXL'], colors: ['玄青色','月白色'], gender: '男', tags: ['唐制','男装'], desc: '唐制圆领袍，仿昭陵壁画形制，纯棉面料透气舒适，腰束蹀躞带，尽显大唐风范。' },
-  { id: 'h3', name: '褙子套装 · 藕荷色', style: '宋制', coverIdx: 3, pricePerDay: 78, deposit: 250, stock: 4, sales: 96, sizes: ['S','M','L'], colors: ['藕荷色','烟青色'], gender: '女', tags: ['宋制','女装'], desc: '宋制褙子+宋裤套装，改良直领对襟，两侧开衩，上身为天丝面料，下裳为百褶裤。' },
-  { id: 'h4', name: '道袍 · 茶褐色', style: '明制', coverIdx: 4, pricePerDay: 68, deposit: 200, stock: 6, sales: 213, sizes: ['M','L','XL'], colors: ['茶褐色','竹青色'], gender: '男', tags: ['明制','男装','热卖'], desc: '明制道袍，直领大襟，暗纹织花，袖宽三尺。面料纯棉麻混纺，古朴儒雅。' },
-  { id: 'h5', name: '马面裙套装 · 凤穿牡丹', style: '明制', coverIdx: 5, pricePerDay: 98, deposit: 300, stock: 3, sales: 287, sizes: ['S','M','L','XL'], colors: ['藏蓝色','酒红色'], gender: '女', tags: ['明制','女装','爆款'], desc: '明制竖领长衫+马面裙，织金工艺，裙襕绣凤穿牡丹花纹，五对褶裙，华贵大气。' },
-  { id: 'h6', name: '飞鱼服 · 绯红色', style: '明制', coverIdx: 6, pricePerDay: 128, deposit: 400, stock: 2, sales: 156, sizes: ['L','XL'], colors: ['绯红色','玄黑色'], gender: '男', tags: ['明制','男装','高端'], desc: '明制飞鱼服，云锦面料，肩袖绣飞鱼纹，贴里+曳撒形制，适合古风拍摄、舞台演出。' },
-  { id: 'h7', name: '袒领襦裙 · 葡萄紫', style: '唐制', coverIdx: 7, pricePerDay: 88, deposit: 250, stock: 4, sales: 132, sizes: ['S','M','L'], colors: ['葡萄紫','琥珀黄'], gender: '女', tags: ['唐制','女装'], desc: '唐制袒领半臂+高腰襦裙，坦领设计显锁骨线条，间色裙配色大胆，唐风浓郁。' },
-  { id: 'h8', name: '直裾深衣 · 玄纁色', style: '晋制', coverIdx: 8, pricePerDay: 78, deposit: 200, stock: 3, sales: 89, sizes: ['M','L','XL'], colors: ['玄纁色'], gender: '中性', tags: ['晋制','经典'], desc: '晋制直裾深衣，交领右衽，宽袍大袖，玄衣纁裳。衣缘镶朱红云纹，古朴庄重。' },
-  { id: 'h9', name: '诃子裙 · 天水碧', style: '唐制', coverIdx: 9, pricePerDay: 108, deposit: 300, stock: 3, sales: 201, sizes: ['S','M','L'], colors: ['天水碧','胭脂粉'], gender: '女', tags: ['唐制','女装','爆款'], desc: '唐制诃子裙大袖衫，诃子为改良吊带式，外配大袖衫，裙摆四米，仙气十足。' },
-  { id: 'h10', name: '魏晋风大袖 · 月华白', style: '魏晋', coverIdx: 10, pricePerDay: 88, deposit: 250, stock: 5, sales: 176, sizes: ['均码'], colors: ['月华白','烟灰蓝'], gender: '中性', tags: ['魏晋','中性','写真'], desc: '魏晋风大袖衫，双层纱质面料，广袖飘飘，仙风道骨。适合古风写真、汉服活动。' },
-  { id: 'h11', name: '圆领衫 · 竹青色', style: '宋制', coverIdx: 11, pricePerDay: 65, deposit: 180, stock: 7, sales: 118, sizes: ['M','L','XL'], colors: ['竹青色','月白色'], gender: '男', tags: ['宋制','男装'], desc: '宋制圆领衫，纯棉面料，窄袖设计，日常穿着舒适便利，文艺气息十足。' },
-  { id: 'h12', name: '对襟襦裙 · 杏子黄', style: '晋制', coverIdx: 12, pricePerDay: 72, deposit: 200, stock: 4, sales: 76, sizes: ['S','M','L'], colors: ['杏子黄','藕荷色'], gender: '女', tags: ['晋制','女装'], desc: '晋制对襟襦裙，清新配色，裙摆三米，上襦刺绣缠枝莲纹，温婉大方。' },
+  { id: 'h1', name: '青衣水袖 · 月白', style: '青衣', coverIdx: 1, pricePerDay: 88, deposit: 260, stock: 5, sales: 168, sizes: ['S','M','L','XL'], colors: ['月白','水蓝'], gender: '女', tags: ['热门','青衣','水袖'], desc: '晋剧青衣水袖套装，月白缎面配浅蓝滚边，袖长适合练习云手、亮相和经典唱段展示。' },
+  { id: 'h2', name: '花旦短袄 · 桃花粉', style: '花旦', coverIdx: 2, pricePerDay: 78, deposit: 220, stock: 8, sales: 142, sizes: ['S','M','L'], colors: ['桃花粉','柳绿'], gender: '女', tags: ['花旦','俏丽'], desc: '花旦短袄配彩裙，色彩明快，适合《打金枝》等轻快折子戏体验、研学拍摄与舞台走位。' },
+  { id: 'h3', name: '老生褶子 · 玄青', style: '老生', coverIdx: 3, pricePerDay: 86, deposit: 260, stock: 4, sales: 96, sizes: ['M','L','XL'], colors: ['玄青','月白'], gender: '男', tags: ['老生','褶子'], desc: '老生褶子沉稳端正，配可拆腰带和袖口内衬，适合须生唱段、身段课和剧目导览演示。' },
+  { id: 'h4', name: '武生靠衣 · 赤金', style: '武生', coverIdx: 4, pricePerDay: 128, deposit: 420, stock: 3, sales: 213, sizes: ['M','L','XL'], colors: ['赤金','靛蓝'], gender: '男', tags: ['武生','靠旗','热卖'], desc: '武生靠衣含靠旗、护肩和腰封，视觉冲击强，适合三关点帅类武戏展示和沉浸式打卡。' },
+  { id: 'h5', name: '晋剧公主蟒 · 凤穿牡丹', style: '旦角', coverIdx: 5, pricePerDay: 138, deposit: 450, stock: 3, sales: 287, sizes: ['S','M','L','XL'], colors: ['藏蓝','酒红'], gender: '女', tags: ['旦角','蟒袍','爆款'], desc: '公主蟒袍以凤穿牡丹纹样呼应《打金枝》人物气质，织金纹饰饱满，适合舞台体验与主题写真。' },
+  { id: 'h6', name: '净角蟒袍 · 绯红', style: '净角', coverIdx: 6, pricePerDay: 148, deposit: 500, stock: 2, sales: 156, sizes: ['L','XL'], colors: ['绯红','玄黑'], gender: '男', tags: ['净角','蟒袍','高端'], desc: '净角蟒袍厚重挺括，肩部纹样夸张，搭配脸谱工坊可完成完整角色造型。' },
+  { id: 'h7', name: '小生帔衣 · 葡萄紫', style: '小生', coverIdx: 7, pricePerDay: 96, deposit: 280, stock: 4, sales: 132, sizes: ['M','L','XL'], colors: ['葡萄紫','琥珀黄'], gender: '男', tags: ['小生','帔衣'], desc: '小生帔衣线条清朗，适合书生、公子类角色体验，轻便好穿，适合社交动态与课堂展示。' },
+  { id: 'h8', name: '丑角茶衣 · 玄纁', style: '丑角', coverIdx: 8, pricePerDay: 68, deposit: 180, stock: 3, sales: 89, sizes: ['M','L','XL'], colors: ['玄纁'], gender: '中性', tags: ['丑角','经典'], desc: '丑角茶衣行动灵活，便于表演矮步、圆场和插科打诨身段，适合互动体验课程。' },
+  { id: 'h9', name: '花旦云肩 · 天水碧', style: '花旦', coverIdx: 9, pricePerDay: 98, deposit: 260, stock: 3, sales: 201, sizes: ['S','M','L'], colors: ['天水碧','胭脂粉'], gender: '女', tags: ['花旦','云肩','爆款'], desc: '花旦云肩套装层次丰富，水钻与绣片点缀，适合亮相拍照和戏曲主题活动。' },
+  { id: 'h10', name: '水袖练功衣 · 月华白', style: '水袖', coverIdx: 10, pricePerDay: 72, deposit: 180, stock: 5, sales: 176, sizes: ['均码'], colors: ['月华白','烟灰蓝'], gender: '中性', tags: ['水袖','中性','练功'], desc: '轻量水袖练功衣，袖长适中，便于初学者练习抛袖、收袖、翻袖等基础动作。' },
+  { id: 'h11', name: '老生圆领衫 · 竹青', style: '老生', coverIdx: 11, pricePerDay: 76, deposit: 200, stock: 7, sales: 118, sizes: ['M','L','XL'], colors: ['竹青','月白'], gender: '男', tags: ['老生','男装'], desc: '老生圆领衫质感清雅，适合讲解晋剧行当、日常排练和文旅讲解员角色造型。' },
+  { id: 'h12', name: '晋剧彩裙 · 杏子黄', style: '旦角', coverIdx: 12, pricePerDay: 82, deposit: 220, stock: 4, sales: 76, sizes: ['S','M','L'], colors: ['杏子黄','藕荷'], gender: '女', tags: ['旦角','彩裙'], desc: '晋剧彩裙配对襟短衫，色彩温婉，便于搭配云肩、披帛和水袖，适合研学换装。' },
 ]
 
 export const faqList = [
@@ -109,14 +109,15 @@ export const coverGradient = (idx: number): string => {
 }
 
 export const colorMap: Record<string, string> = {
-  '石榴红': '#D44444', '碧蓝色': '#4A90D9', '玄青色': '#2D3E50', '月白色': '#E8F0F0',
-  '藕荷色': '#B8A0C0', '烟青色': '#6B8A8A', '茶褐色': '#8B6F4E', '竹青色': '#6B8A4E',
-  '藏蓝色': '#1A3A5C', '酒红色': '#8B0000', '绯红色': '#CC3333', '玄黑色': '#2D2D2D',
-  '葡萄紫': '#6B3F8A', '琥珀黄': '#C9A84C', '玄纁色': '#8B3A3A', '天水碧': '#3B8E8E',
-  '胭脂粉': '#F0A0A0', '月华白': '#F0F0F0', '烟灰蓝': '#9090A0', '杏子黄': '#E8C860',
+  '月白': '#E8F0F0', '水蓝': '#4A90D9', '桃花粉': '#F0A0A0', '柳绿': '#6B8A4E',
+  '玄青': '#2D3E50', '赤金': '#C9A84C', '靛蓝': '#1E3A8A', '藏蓝': '#1A3A5C',
+  '酒红': '#8B0000', '绯红': '#CC3333', '玄黑': '#2D2D2D', '葡萄紫': '#6B3F8A',
+  '琥珀黄': '#C9A84C', '玄纁': '#8B3A3A', '天水碧': '#3B8E8E', '胭脂粉': '#F0A0A0',
+  '月华白': '#F0F0F0', '烟灰蓝': '#9090A0', '竹青': '#6B8A4E', '杏子黄': '#E8C860',
+  '藕荷': '#B8A0C0',
 }
 
-export const styles = ['全部', '唐制', '宋制', '明制', '晋制', '魏晋']
+export const styles = ['全部', '青衣', '花旦', '老生', '武生', '旦角', '净角', '小生', '丑角', '水袖']
 
 export function calcDays(start: string, end: string): number {
   if (!start || !end) return 0

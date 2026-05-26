@@ -106,7 +106,7 @@ type TabId = 'watch' | 'study' | 'shop' | 'course' | 'social' | 'map' | 'chat' |
 
 const menuItems: Array<{ id: TabId; icon: typeof Theater; label: string }> = [
   { id: 'watch', icon: Theater, label: '演艺观赏' },
-  { id: 'study', icon: Camera, label: '汉服租赁' },
+  { id: 'study', icon: Camera, label: '戏服租赁' },
   { id: 'shop', icon: ShoppingBag, label: '精品好物' },
   { id: 'course', icon: GraduationCap, label: '普惠教学' },
   { id: 'social', icon: Users, label: '文化社交' },
@@ -118,7 +118,7 @@ const menuItems: Array<{ id: TabId; icon: typeof Theater; label: string }> = [
 
 const tabContent: Record<TabId, { title: string; subtitle: string }> = {
   watch: { title: '晋剧演艺观赏区', subtitle: '沉浸式数字剧场，经典剧目云端呈现' },
-  study: { title: '汉服租赁馆', subtitle: '唐制/宋制/明制汉服租赁与写真服务' },
+  study: { title: '戏服租赁馆', subtitle: '青衣/花旦/老生/武生戏服租赁与写真服务' },
   shop: { title: '精品好物市集', subtitle: '非遗手作，匠心传承' },
   course: { title: '普惠教学课堂', subtitle: '系统化课程，从零起步学习晋剧' },
   social: { title: '文化社交广场', subtitle: '戏迷社群，共话梨园' },
@@ -128,7 +128,21 @@ const tabContent: Record<TabId, { title: string; subtitle: string }> = {
   chat: { title: '小e · AI助手', subtitle: '与智能助手对话，快速获取晋剧文化和文创推荐' },
 }
 
-const courseCover = (n: number) => new URL(`../assets/courses/course-${n}.svg`, import.meta.url).href
+const generatedAsset = (name: string) => `${import.meta.env.BASE_URL}generated/${name}`
+const shopHeroProducts = [
+  { name: '晋剧脸谱盲盒', image: new URL('../assets/products/product-1.png', import.meta.url).href },
+  { name: '戏曲主题丝巾', image: new URL('../assets/products/product-5.png', import.meta.url).href },
+  { name: '非遗陶瓷茶具套装', image: new URL('../assets/products/product-8.png', import.meta.url).href },
+]
+const courseImages = [
+  'course-1.jpg',
+  'course-2.jpg',
+  'course-3.jpg',
+  'course-4.jpg',
+  'course-5.jpg',
+  'course-6.jpg',
+]
+const courseCover = (n: number) => generatedAsset(courseImages[(Math.max(1, n) - 1) % courseImages.length])
 
 const courses = [
   { id: 1, title: '晋剧身段入门', category: '基础课程', total: 12, done: 8, teacher: '王老师', teacherTitle: '国家一级演员', next: '水袖基础组合', level: '入门', students: 156, rating: 4.8, description: '系统学习晋剧身段的基本功，从站姿、步法到水袖运用，掌握传统戏曲表演的基础技巧。', tags: ['身段', '基础', '表演'], image: courseCover(1), lessons: ['台步与圆场', '云手与亮相', '水袖基础组合'], outcome: '能完成一段 60 秒身段小组合' },
@@ -141,17 +155,54 @@ const courses = [
 
 type Course = (typeof courses)[number]
 
-type Comment = { author: string; text: string }
+type Comment = { id?: number; author: string; text: string; avatar?: string; createdAt?: string }
 
 type Post = {
   id: number; author: string; avatar: string; level: string; topic: string; type: string
   replies: number; likes: number; time: string; tags: string[]; content: string; comments?: Comment[]
 }
 
+const socialPostsStorageKey = 'jinbang.social.posts'
+const socialLikesStorageKey = (accountId: string) => `jinbang.social.likes.${accountId}`
+
+function loadSocialPosts(): Post[] {
+  try {
+    const raw = localStorage.getItem(socialPostsStorageKey)
+    if (!raw) return posts
+    const parsed = JSON.parse(raw) as unknown
+    return Array.isArray(parsed) ? parsed as Post[] : posts
+  } catch {
+    return posts
+  }
+}
+
+function loadLikedPosts(accountId: string): Set<number> {
+  try {
+    const raw = localStorage.getItem(socialLikesStorageKey(accountId))
+    if (!raw) return new Set<number>()
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return new Set<number>()
+    return new Set(parsed.filter((id): id is number => typeof id === 'number' && Number.isFinite(id)))
+  } catch {
+    return new Set<number>()
+  }
+}
+
+function formatCommentTime(value?: string) {
+  if (!value) return '刚刚'
+  const time = new Date(value).getTime()
+  if (!Number.isFinite(time)) return '刚刚'
+  const diff = Date.now() - time
+  if (diff < 60_000) return '刚刚'
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}分钟前`
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}小时前`
+  return new Date(value).toLocaleDateString('zh-CN')
+}
+
 const posts: Post[] = [
-  { id: 1, author: '汉服摄影社', avatar: '👗', level: '金牌社团', topic: '本周限定汉服写真套餐上线，赠送精修六张。', type: '活动', replies: 28, likes: 126, time: '2小时前', tags: ['汉服', '写真', '优惠'], content: '春季汉服写真季正式开启！提供多种古风场景选择，专业摄影师团队，赠送6张精修照片。适合个人写真、情侣拍摄、闺蜜聚会等多种需求。预约从速！' },
+  { id: 1, author: '梨园戏服社', avatar: '👗', level: '金牌社团', topic: '本周限定戏服写真套餐上线，赠送精修六张。', type: '活动', replies: 28, likes: 126, time: '2小时前', tags: ['戏服', '写真', '优惠'], content: '春季戏服写真季正式开启！提供青衣、花旦、武生等戏曲场景选择，专业摄影师团队，赠送6张精修照片。适合个人写真、情侣拍摄、研学活动等多种需求。预约从速！' },
   { id: 2, author: '晋风影像', avatar: '📸', level: '专业团队', topic: '寻求晋剧主题商业活动合作，现场布景与摄影支持。', type: '合作', replies: 17, likes: 88, time: '4小时前', tags: ['商业', '合作', '晋剧'], content: '我们团队专注于晋剧文化主题的商业活动拍摄，提供完整的现场布景搭建、专业灯光设备和后期制作服务。已合作多家品牌，期待与您携手打造精彩活动！' },
-  { id: 3, author: '古风租赁部', avatar: '👘', level: '认证商家', topic: '节日汉服租赁已开抢，大学生专属折扣。', type: '促销', replies: 9, likes: 64, time: '6小时前', tags: ['租赁', '折扣', '学生'], content: '清明节将至，汉服租赁优惠活动开启！大学生出示证件享8折优惠，多款新品上架，支持线上预订线下试穿。库存有限，先到先得！' },
+  { id: 3, author: '戏服租赁部', avatar: '👘', level: '认证商家', topic: '节日戏服租赁已开抢，大学生专属折扣。', type: '促销', replies: 9, likes: 64, time: '6小时前', tags: ['租赁', '折扣', '学生'], content: '清明节将至，戏服租赁优惠活动开启！大学生出示证件享8折优惠，青衣水袖、花旦云肩、公主蟒袍等新品上架，支持线上预订线下试穿。库存有限，先到先得！' },
   { id: 4, author: '梨园小戏迷', avatar: '🎭', level: '戏迷', topic: '分享我第一次观看晋剧的感受，太震撼了！', type: '分享', replies: 23, likes: 45, time: '8小时前', tags: ['初体验', '感受', '推荐'], content: '昨晚第一次去现场观看晋剧《打金枝》，演员们的唱腔身段都太精彩了！特别是老生那段唱腔，余音绕梁三日不绝。强烈推荐大家去现场感受传统文化的魅力！' },
   { id: 5, author: '戏曲研习者', avatar: '📚', level: '学者', topic: '讨论晋剧中"梆子腔"的音乐特色和传承意义', type: '讨论', replies: 31, likes: 67, time: '12小时前', tags: ['梆子腔', '音乐', '传承'], content: '梆子腔作为晋剧的灵魂，承载着丰富的音乐内涵。从节奏到旋律，都蕴含着深厚的文化底蕴。大家怎么看梆子腔在现代戏曲传承中的地位和作用？' },
   { id: 6, author: '晋韵票友团', avatar: '🎤', level: '票友组织', topic: '本周末票友聚会，欢迎新老票友加入！', type: '活动', replies: 15, likes: 38, time: '1天前', tags: ['聚会', '票友', '交流'], content: '晋韵票友团本周末举办月度聚会活动，内容包括唱段交流、身段练习和茶话会。无论你是资深票友还是戏曲爱好者，都欢迎前来参加！地址：山西大戏楼，时间：周六下午2点。' },
@@ -180,11 +231,11 @@ export default function Dashboard({
 }) {
   const isAdmin = currentAccount.role === 'admin'
   const [activeTab, setActiveTab] = useState<TabId>('watch')
-  const [likedPosts, setLikedPosts] = useState(() => new Set<number>())
+  const [likedPosts, setLikedPosts] = useState(() => loadLikedPosts(currentAccount.id))
   const [naviTemplate, setNaviTemplate] = useState<string | undefined>(undefined)
   const [shopEntryQuery, setShopEntryQuery] = useState('')
   const [globalQuery, setGlobalQuery] = useState('')
-  const [recentActions, setRecentActions] = useState<string[]>(['演艺观赏', '汉服租赁', '精品好物'])
+  const [recentActions, setRecentActions] = useState<string[]>(['演艺观赏', '戏服租赁', '精品好物'])
   const [accountInfo, setAccountInfo] = useState(currentAccount)
   const handleAccountUpdate = useCallback((updated: Account) => { setAccountInfo(updated) }, [])
 
@@ -197,7 +248,7 @@ export default function Dashboard({
   const [coursesState, setCoursesState] = useState<Course[]>(courses)
   const [showAddCourse, setShowAddCourse] = useState(false)
   const [newCourse, setNewCourse] = useState<NewCourse>({ title: '', category: '基础课程', total: 8, teacher: '', teacherTitle: '', level: '入门', students: 0, rating: 4.5, description: '', tags: '' })
-  const [postsState, setPostsState] = useState<Post[]>(posts)
+  const [postsState, setPostsState] = useState<Post[]>(() => loadSocialPosts())
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [showPostDetail, setShowPostDetail] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -210,6 +261,22 @@ export default function Dashboard({
       .then(setRentalOrderCount)
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(socialPostsStorageKey, JSON.stringify(postsState))
+    } catch {
+      // Ignore storage quota / privacy mode errors; in-memory state still works.
+    }
+  }, [postsState])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(socialLikesStorageKey(accountInfo.id), JSON.stringify([...likedPosts]))
+    } catch {
+      // Ignore storage quota / privacy mode errors; in-memory state still works.
+    }
+  }, [accountInfo.id, likedPosts])
 
   const currentTab = tabContent[activeTab]
 
@@ -248,7 +315,7 @@ export default function Dashboard({
   const handleSmartSearch = useCallback(() => {
     const q = globalQuery.trim()
     if (!q) return
-    if (/汉服|租|写真|服装/.test(q)) navigateTo('study')
+    if (/戏服|租|写真|服装/.test(q)) navigateTo('study')
     else if (/买|商品|文创|脸谱|盲盒|周边|礼物/.test(q)) navigateTo('shop', { shopQuery: q })
     else if (/课程|学|唱腔|身段|教学/.test(q)) navigateTo('course', { courseQuery: q })
     else if (/动态|社交|分享|活动|帖子/.test(q)) navigateTo('social', { socialQuery: q })
@@ -278,10 +345,42 @@ export default function Dashboard({
     setNewCourse({ title: '', category: '基础课程', total: 8, teacher: '', teacherTitle: '', level: '入门', students: 0, rating: 4.5, description: '', tags: '' })
   }, [newCourse])
 
-  const handleAddComment = useCallback((postId: number, author: string, text: string) => { setPostsState(prev => prev.map(p => p.id === postId ? { ...p, comments: [...(p.comments || []), { author, text }] } : p)) }, [])
-  const handlePublishPost = useCallback((content: string, topic: string, type: string) => {
-    setPostsState(prev => [{ id: Date.now(), author: accountInfo.displayName || accountInfo.username, avatar: accountInfo.avatar || '👤', level: '用户', topic: topic || content.slice(0, 30), type, replies: 0, likes: 0, time: '刚刚', tags: [], content } as Post, ...prev])
+  const handleToggleLike = useCallback((postId: number) => {
+    setLikedPosts(prev => {
+      const next = new Set(prev)
+      next.has(postId) ? next.delete(postId) : next.add(postId)
+      return next
+    })
+  }, [])
+  const handleAddComment = useCallback((postId: number, text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    const comment: Comment = {
+      id: Date.now(),
+      author: accountInfo.displayName || accountInfo.username || '我',
+      avatar: accountInfo.avatar,
+      text: trimmed,
+      createdAt: new Date().toISOString(),
+    }
+    setPostsState(prev => prev.map(p => p.id === postId ? { ...p, replies: p.replies + 1, comments: [...(p.comments || []), comment] } : p))
   }, [accountInfo])
+  const handlePublishPost = useCallback((content: string, topic: string, type: string) => {
+    setPostsState(prev => [{ id: Date.now(), author: accountInfo.displayName || accountInfo.username, avatar: accountInfo.avatar || '👤', level: '用户', topic: topic || content.slice(0, 30), type, replies: 0, likes: 0, time: '刚刚', tags: [], content, comments: [] } as Post, ...prev])
+  }, [accountInfo])
+  const handleDeletePost = useCallback((id: number) => {
+    setPostsState(prev => prev.filter(x => x.id !== id))
+    setLikedPosts(prev => {
+      if (!prev.has(id)) return prev
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+    if (selectedPost?.id === id) {
+      setSelectedPost(null)
+      setShowPostDetail(false)
+    }
+  }, [selectedPost?.id])
+  const activePost = useMemo(() => selectedPost ? postsState.find(p => p.id === selectedPost.id) ?? selectedPost : null, [postsState, selectedPost])
 
   return (
     <div className="ios-app-bg flex min-h-full flex-col lg:h-full lg:overflow-hidden">
@@ -324,7 +423,7 @@ export default function Dashboard({
             <div className="space-y-1">
               {[
                 { t: 'watch', icon: '🎭', label: '添加剧目' },
-                { t: 'study', icon: '👘', label: '管理汉服租赁' },
+                { t: 'study', icon: '👘', label: '管理戏服租赁' },
                 { t: 'course', icon: '📖', label: '添加课程' },
                 { t: 'social', icon: '💬', label: '管理动态' },
                 { t: 'shop', icon: '🛍️', label: '管理商品' },
@@ -391,6 +490,15 @@ export default function Dashboard({
                   </div>
                   <h2 className="text-2xl font-bold text-white sm:text-3xl">{currentTab.title}</h2>
                   <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/58">{currentTab.subtitle}</p>
+                  {activeTab === 'shop' && (
+                    <div className="mt-4 grid max-w-xl grid-cols-3 gap-2" aria-label="精品好物配图">
+                      {shopHeroProducts.map(item => (
+                        <div key={item.name} className="aspect-[4/3] overflow-hidden rounded-2xl bg-black/20 ring-1 ring-white/10">
+                          <img src={item.image} alt={item.name} className="h-full w-full object-contain" loading="lazy" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex w-full max-w-xl flex-col gap-3 sm:flex-row">
                   <div className="relative flex-1">
@@ -399,7 +507,7 @@ export default function Dashboard({
                       value={globalQuery}
                       onChange={e => setGlobalQuery(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleSmartSearch() }}
-                      placeholder="搜索课程、文创、汉服、戏台..."
+                      placeholder="搜索课程、文创、戏服、戏台..."
                       className="ios-focus-ring w-full rounded-2xl pl-11 pr-4 py-3 text-sm text-white outline-none placeholder-white/35 glass-control"
                     />
                   </div>
@@ -430,7 +538,7 @@ export default function Dashboard({
                       {activeTab === 'shop' && (<div className="space-y-5"><ShopPanel currentAccount={accountInfo} initialQuery={shopEntryQuery} /><SalesFlowMap /></div>)}
                       {activeTab === 'chat' && <AIChat />}
                       {activeTab === 'course' && <CoursePanel query={courseQuery} onQueryChange={setCourseQuery} selectedCategory={selectedCourseCategory} onCategoryChange={setSelectedCourseCategory} courses={filteredCourses} categories={courseCategories} onSelectCourse={handleSelectCourse} isAdmin={isAdmin} showAddCourse={showAddCourse} onToggleAddCourse={() => setShowAddCourse(p => !p)} newCourse={newCourse} onNewCourseChange={setNewCourse} onAddCourse={handleAddCourse} />}
-                      {activeTab === 'social' && <SocialPanel query={socialQuery} onQueryChange={setSocialQuery} posts={postsState} selectedType={selectedPostType} onTypeChange={setSelectedPostType} types={postTypes} likedPosts={likedPosts} onToggleLike={(id) => setLikedPosts(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })} onSelectPost={(p) => { setSelectedPost(p); setShowPostDetail(true) }} onPublish={handlePublishPost} onDeletePost={(id) => setPostsState(p => p.filter(x => x.id !== id))} isAdmin={isAdmin} />}
+                      {activeTab === 'social' && <SocialPanel query={socialQuery} onQueryChange={setSocialQuery} posts={postsState} selectedType={selectedPostType} onTypeChange={setSelectedPostType} types={postTypes} likedPosts={likedPosts} onToggleLike={handleToggleLike} onSelectPost={(p) => { setSelectedPost(p); setShowPostDetail(true) }} onPublish={handlePublishPost} onDeletePost={handleDeletePost} isAdmin={isAdmin} />}
                       {activeTab === 'map' && <OperaMap onExploreFace={handleGoToFace} />}
                       {activeTab === 'face' && <FaceWorkshop initialTemplate={naviTemplate} onViewShop={(query) => navigateTo('shop', { shopQuery: query })} />}
                       {activeTab === 'admin' && isAdmin && <AdminDashboard />}
@@ -458,7 +566,7 @@ export default function Dashboard({
                 </button>
                 <button onClick={() => navigateTo('study')}
                   className="ios-touch ios-focus-ring w-full flex items-center gap-2 rounded-2xl px-3 py-2 text-sm text-white/60 hover:text-amber-200 hover:bg-white/[0.08] transition-all">
-                  👘 租赁汉服
+                  👘 租赁戏服
                 </button>
                 <button onClick={() => navigateTo('course')}
                   className="ios-touch ios-focus-ring w-full flex items-center gap-2 rounded-2xl px-3 py-2 text-sm text-white/60 hover:text-amber-200 hover:bg-white/[0.08] transition-all">
@@ -476,7 +584,7 @@ export default function Dashboard({
 
       {/* Modals */}
       <AnimatePresence>
-        {showPostDetail && selectedPost && <PostDetailPanel post={selectedPost} onClose={() => setShowPostDetail(false)} onAddComment={handleAddComment} />}
+        {showPostDetail && activePost && <PostDetailPanel post={activePost} currentAccount={accountInfo} isLiked={likedPosts.has(activePost.id)} likeCount={activePost.likes + (likedPosts.has(activePost.id) ? 1 : 0)} onClose={() => setShowPostDetail(false)} onToggleLike={handleToggleLike} onAddComment={handleAddComment} />}
         {showCourseDetail && selectedCourse && <CourseDetailPanel course={selectedCourse} onClose={handleCloseCourseDetail} />}
         {showSettings && <UserSettingsModal account={accountInfo} accountsSnapshot={accounts} onClose={() => setShowSettings(false)} onUpdate={handleAccountUpdate} />}
       </AnimatePresence>
@@ -490,8 +598,8 @@ function ConnectedHub({ activeTab, onNavigate }: { activeTab: TabId; onNavigate:
     { from: 'watch', icon: BookOpen, title: '看完去学', desc: '把剧目里的身段、唱腔接到课程练习', action: '打开身段课', target: 'course', payload: { courseQuery: '身段' } },
     { from: 'course', icon: Palette, title: '学完实操', desc: '化妆造型课后直接进入脸谱工坊', action: '开始画脸谱', target: 'face', payload: { faceTemplate: 'jing' } },
     { from: 'face', icon: ShoppingBag, title: '作品变周边', desc: '按当前角色搜索脸谱、盲盒和文创', action: '找脸谱文创', target: 'shop', payload: { shopQuery: '脸谱' } },
-    { from: 'shop', icon: Camera, title: '搭配租赁', desc: '文创、服饰和写真服务连成套餐', action: '租一套汉服', target: 'study' },
-    { from: 'study', icon: Users, title: '晒出造型', desc: '租赁后去文化广场发布穿搭动态', action: '发布分享', target: 'social', payload: { socialQuery: '汉服' } },
+    { from: 'shop', icon: Camera, title: '搭配租赁', desc: '文创、服饰和写真服务连成套餐', action: '租一套戏服', target: 'study' },
+    { from: 'study', icon: Users, title: '晒出造型', desc: '租赁后去文化广场发布穿搭动态', action: '发布分享', target: 'social', payload: { socialQuery: '戏服' } },
     { from: 'social', icon: MapPin, title: '线下相见', desc: '从活动帖子找到附近戏台和剧院', action: '看线下地图', target: 'map' },
     { from: 'map', icon: Theater, title: '回到剧场', desc: '选好地点后继续浏览近期演出', action: '看演艺', target: 'watch' },
     { from: 'chat', icon: Wand2, title: '问完即行动', desc: '让小e给建议，再进入课程或商城验证', action: '去课程', target: 'course', payload: { courseQuery: '入门' } },
@@ -500,7 +608,7 @@ function ConnectedHub({ activeTab, onNavigate }: { activeTab: TabId; onNavigate:
   const quick = [
     { label: '演艺到课程', target: 'course' as TabId, payload: { courseQuery: '晋剧' }, icon: Theater },
     { label: '脸谱到文创', target: 'shop' as TabId, payload: { shopQuery: '脸谱' }, icon: Palette },
-    { label: '汉服到社交', target: 'social' as TabId, payload: { socialQuery: '汉服' }, icon: Camera },
+    { label: '戏服到社交', target: 'social' as TabId, payload: { socialQuery: '戏服' }, icon: Camera },
     { label: '地图到工坊', target: 'face' as TabId, payload: { faceTemplate: 'guanyu' }, icon: MapPin },
   ]
 
@@ -542,12 +650,36 @@ function ConnectedHub({ activeTab, onNavigate }: { activeTab: TabId; onNavigate:
 }
 
 // ─── Post Detail Panel ───
-function PostDetailPanel({ post, onClose, onAddComment }: { post: Post; onClose: () => void; onAddComment: (postId: number, author: string, text: string) => void }) {
+function PostDetailPanel({
+  post,
+  currentAccount,
+  isLiked,
+  likeCount,
+  onClose,
+  onToggleLike,
+  onAddComment,
+}: {
+  post: Post
+  currentAccount: Account
+  isLiked: boolean
+  likeCount: number
+  onClose: () => void
+  onToggleLike: (postId: number) => void
+  onAddComment: (postId: number, text: string) => void
+}) {
   const [commentText, setCommentText] = useState('')
-  const submit = () => { if (!commentText.trim()) return; onAddComment(post.id, '我', commentText.trim()); setCommentText('') }
+  const comments = post.comments || []
+  const commentCount = Math.max(post.replies, comments.length)
+  const currentName = currentAccount.displayName || currentAccount.username || '我'
+  const submit = () => {
+    const text = commentText.trim()
+    if (!text) return
+    onAddComment(post.id, text)
+    setCommentText('')
+  }
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
-      <motion.aside initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ type: 'spring', stiffness: 260, damping: 28 }} className="w-full max-w-3xl rounded-3xl bg-[#090507] p-6 glass-window" onClick={(e) => e.stopPropagation()}>
+      <motion.aside initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ type: 'spring', stiffness: 260, damping: 28 }} className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#090507] p-6 glass-window" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between">
           <div>
             <div className="font-bold text-amber-300">{post.author}</div>
@@ -556,10 +688,48 @@ function PostDetailPanel({ post, onClose, onAddComment }: { post: Post; onClose:
           </div>
           <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm text-white/70 glass-control hover:text-white">关闭</button>
         </div>
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-y border-white/10 py-3 text-sm text-white/55">
+          <button onClick={() => onToggleLike(post.id)} className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 transition-all ${isLiked ? 'bg-red-500/15 text-red-300' : 'glass-control hover:text-red-200'}`}>
+            <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-400 text-red-400' : ''}`} />
+            {isLiked ? '已点赞' : '点赞'} {likeCount}
+          </button>
+          <span className="inline-flex items-center gap-1.5">
+            <MessageCircle className="h-4 w-4" />
+            {commentCount} 条评论
+          </span>
+        </div>
         <div className="mt-6">
           <div className="text-sm text-white/60 mb-2">评论</div>
-          <div className="space-y-3">{(post.comments || []).map((c, i) => (<div key={i} className="rounded-xl p-3 bg-white/5 text-white/75"><div className="font-medium">{c.author}</div><div className="text-sm mt-1">{c.text}</div></div>))}</div>
-          <div className="mt-4"><textarea value={commentText} onChange={(e) => setCommentText(e.target.value)} className="w-full rounded-xl px-4 py-2 bg-black/20 text-white" rows={3} placeholder="写下你的评论" /><div className="mt-2 text-right"><button onClick={submit} className="rounded-xl bg-amber-500 px-4 py-2 text-black">发表评论</button></div></div>
+          <div className="space-y-3">
+            {comments.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-white/35">暂无评论，来留下第一条想法。</div>
+            ) : comments.map((c, i) => {
+              const imageAvatar = !!c.avatar && /^(data:|https?:|blob:)/.test(c.avatar)
+              return (
+                <div key={c.id ?? `${c.author}-${i}`} className="rounded-xl p-3 bg-white/5 text-white/75">
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-amber-500/20 text-sm text-amber-100 flex items-center justify-center">
+                      {imageAvatar ? <img src={c.avatar} alt="" className="h-full w-full object-cover" /> : (c.avatar || c.author.slice(0, 1) || '我')}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="font-medium">{c.author}</div>
+                        <span className="text-xs text-white/35">{formatCommentTime(c.createdAt)}</span>
+                      </div>
+                      <div className="text-sm mt-1 leading-6 text-white/70">{c.text}</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-4">
+            <textarea value={commentText} onChange={(e) => setCommentText(e.target.value)} className="w-full resize-none rounded-xl px-4 py-3 bg-black/20 text-white outline-none placeholder-white/35 focus:ring-1 focus:ring-amber-400/40" rows={3} maxLength={240} placeholder="写下你的评论" />
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <span className="text-xs text-white/35">以 {currentName} 发表评论 · {commentText.length}/240</span>
+              <button onClick={submit} disabled={!commentText.trim()} className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-45">发表评论</button>
+            </div>
+          </div>
         </div>
       </motion.aside>
     </motion.div>
@@ -679,7 +849,11 @@ function SocialPanel({ query, onQueryChange, posts, selectedType, onTypeChange, 
       </AnimatePresence>
       <div className="flex gap-2 overflow-x-auto">{types.map(t => (<button key={t} onClick={() => onTypeChange(t)} className={`shrink-0 rounded-xl px-4 py-2 text-sm transition-all ${selectedType === t ? 'bg-amber-500/30 text-amber-300' : 'glass-control text-white/60'}`}>{t}</button>))}</div>
       <div className="space-y-4">
-        {filtered.map(post => (
+        {filtered.map(post => {
+          const liked = likedPosts.has(post.id)
+          const likeCount = post.likes + (liked ? 1 : 0)
+          const commentCount = Math.max(post.replies, post.comments?.length || 0)
+          return (
           <div key={post.id} onClick={() => onSelectPost(post)} className="glass-panel rounded-xl p-5 cursor-pointer hover:border-amber-500/20 transition-all">
             <div className="flex items-center gap-3 mb-3">
               <span className="text-2xl">{post.avatar}</span>
@@ -691,11 +865,12 @@ function SocialPanel({ query, onQueryChange, posts, selectedType, onTypeChange, 
             <p className="text-sm text-white/60 line-clamp-3">{post.content}</p>
             <div className="flex items-center gap-2 mt-3 flex-wrap">{post.tags.map(t => <span key={t} className="text-xs text-amber-400/60">#{t}</span>)}</div>
             <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/10 text-xs text-white/40">
-              <button onClick={(e) => { e.stopPropagation(); onToggleLike(post.id) }} className={`flex items-center gap-1 ${likedPosts.has(post.id) ? 'text-red-400' : 'hover:text-white/60'}`}><Heart className={`h-3.5 w-3.5 ${likedPosts.has(post.id) ? 'fill-red-400' : ''}`} />{post.likes}</button>
-              <span className="flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" />{post.replies}</span>
+              <button onClick={(e) => { e.stopPropagation(); onToggleLike(post.id) }} className={`flex items-center gap-1 ${liked ? 'text-red-400' : 'hover:text-white/60'}`}><Heart className={`h-3.5 w-3.5 ${liked ? 'fill-red-400' : ''}`} />{likeCount}</button>
+              <span className="flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" />{commentCount}</span>
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -706,32 +881,32 @@ function CrossRecommendations({ activeTab, onNavigate }: { activeTab: TabId; onN
   const recs: Record<TabId, { icon: string; label: string; desc: string; target: TabId }[]> = {
     watch: [
       { icon: '📖', label: '学身段', desc: '王老师《晋剧身段入门》12节课', target: 'course' },
-      { icon: '👘', label: '租戏服', desc: '明制马面裙·凤穿牡丹 ¥98/天', target: 'study' },
+      { icon: '👘', label: '租戏服', desc: '公主蟒袍·凤穿牡丹 ¥138/天', target: 'study' },
       { icon: '🎨', label: '画脸谱', desc: '数字画笔绘制《打金枝》脸谱', target: 'face' },
     ],
     study: [
       { icon: '🎭', label: '看剧目', desc: '《打金枝》· 王春梅经典唱段', target: 'watch' },
-      { icon: '💬', label: '晒汉服', desc: '发动态秀造型，票友点赞', target: 'social' },
-      { icon: '📸', label: '约写真', desc: '汉服写真套餐 ¥699起', target: 'shop' },
+      { icon: '💬', label: '晒戏服', desc: '发动态秀造型，票友点赞', target: 'social' },
+      { icon: '📸', label: '约写真', desc: '戏服写真套餐 ¥699起', target: 'shop' },
     ],
     course: [
       { icon: '🎭', label: '看剧目', desc: '学完身段看《傅山进京》', target: 'watch' },
-      { icon: '👘', label: '租汉服', desc: '穿着汉服学身段，更有感觉', target: 'study' },
+      { icon: '👘', label: '租戏服', desc: '穿着戏服学身段，更有感觉', target: 'study' },
       { icon: '🎨', label: '画脸谱', desc: '学完化妆课来实操脸谱', target: 'face' },
     ],
     social: [
-      { icon: '👘', label: '去租赁', desc: '汉服摄影社同款汉服', target: 'study' },
+      { icon: '👘', label: '去租赁', desc: '梨园戏服社同款戏服', target: 'study' },
       { icon: '🛍️', label: '买文创', desc: '热门非遗好物推荐', target: 'shop' },
       { icon: '🎭', label: '去看戏', desc: '票友推荐《见皇姑》', target: 'watch' },
     ],
     shop: [
-      { icon: '👘', label: '租汉服', desc: '搭配文创拍照更好看', target: 'study' },
+      { icon: '👘', label: '租戏服', desc: '搭配文创拍照更好看', target: 'study' },
       { icon: '💬', label: '晒好物', desc: '买了什么？发动态分享', target: 'social' },
       { icon: '🎭', label: '看晋剧', desc: '文创灵感来自经典剧目', target: 'watch' },
     ],
     map: [
       { icon: '🎭', label: '看剧目', desc: '在古戏台看过戏了吗？', target: 'watch' },
-      { icon: '👘', label: '租汉服', desc: '穿汉服逛古戏台', target: 'study' },
+      { icon: '👘', label: '租戏服', desc: '穿戏服逛古戏台', target: 'study' },
       { icon: '🛍️', label: '买文创', desc: '古戏台主题文创', target: 'shop' },
     ],
     face: [
@@ -742,7 +917,7 @@ function CrossRecommendations({ activeTab, onNavigate }: { activeTab: TabId; onN
     admin: [{ icon: '🛡️', label: '用户管理', desc: '管理所有用户账户', target: 'admin' as TabId },{ icon: '📦', label: '订单管理', desc: '查看所有美美租赁订单', target: 'admin' as TabId },],
     chat: [
       { icon: '🎭', label: '看剧目', desc: '聊完了去看一场', target: 'watch' },
-      { icon: '👘', label: '租汉服', desc: 'AI推荐明制道袍 ¥68/天', target: 'study' },
+      { icon: '👘', label: '租戏服', desc: 'AI推荐青衣水袖 ¥88/天', target: 'study' },
       { icon: '📖', label: '学课程', desc: '把AI说的技巧学起来', target: 'course' },
     ],
   }

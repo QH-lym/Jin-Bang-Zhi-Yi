@@ -111,14 +111,14 @@
 
     <h2 id="about">关于晋梆智绎</h2>
     <p><strong>晋梆智绎</strong>是一款基于现代Web技术栈开发的<strong>晋剧文化数字化展示与互动平台</strong>，旨在通过沉浸式数字体验，传承和推广山西晋剧这一国家级非物质文化遗产。</p>
-    <p>平台融合了3D可视化、实时互动、云端数据同步等前沿技术，为用户提供全方位的晋剧文化探索体验。</p>
+    <p>平台融合了3D可视化、实时互动和本地数据管理等技术，为用户提供全方位的晋剧文化探索体验。</p>
 
     <h2 id="features">主要功能</h2>
     <ul>
       <li><strong>3D脸谱工坊</strong>：交互式3D晋剧脸谱展示，支持旋转、缩放</li>
-      <li><strong>汉服租赁</strong>：在线浏览、预订汉服，支持到店取衣或快递配送</li>
+      <li><strong>戏服租赁</strong>：在线浏览、预订戏服，支持到店取衣或快递配送</li>
       <li><strong>文创商城</strong>：脸谱面具、戏曲周边、定制礼品购买</li>
-      <li><strong>云端同步</strong>：本地数据自动备份到云端，多设备无缝切换</li>
+      <li><strong>本地数据</strong>：账户、订单和偏好数据保存在本机，离线可用</li>
       <li><strong>数据可视化</strong>：销售流向图、运营仪表盘</li>
       <li><strong>AI对话</strong>：智能问答，晋剧知识咨询</li>
     </ul>
@@ -133,7 +133,7 @@
     </ul>
     <h3>后端服务</h3>
     <ul>
-      <li><strong>腾讯云 CloudBase</strong>：无服务器架构，云函数 + 云数据库</li>
+      <li><strong>Express 服务</strong>：文件上传与静态资源访问</li>
       <li><strong>IndexedDB</strong>：浏览器本地数据存储</li>
       <li><strong>HTTPS</strong>：全站加密传输</li>
     </ul>
@@ -141,16 +141,16 @@
     <h2 id="faq">常见问题 (FAQ)</h2>
     
     <h3>Q1: 数据存储在哪里？</h3>
-    <p>您的数据首先存储在浏览器本地（IndexedDB），确保离线可用。开启同步功能后，数据会加密传输并存储在腾讯云服务器上。</p>
+    <p>您的账户、订单、收藏和偏好数据存储在浏览器本地（IndexedDB），确保离线可用，不会自动上传到服务器。</p>
 
-    <h3>Q2: 如何同步数据到云端？</h3>
-    <p>登录后，系统会自动在后台同步您的数据。您也可以进入「管理后台」→「同步腾讯云」手动触发同步。</p>
+    <h3>Q2: 如何保留本地数据？</h3>
+    <p>请避免清理浏览器站点数据；桌面端请使用同一安装路径和应用数据目录。</p>
 
     <h3>Q3: 支持哪些浏览器？</h3>
     <p>推荐使用 Chrome、Edge、Firefox、Safari 等现代浏览器。IE 浏览器不支持。</p>
 
-    <h3>Q4: 如何租赁汉服？</h3>
-    <p>进入「汉服租赁」页面 → 选择心仪款式 → 选择租赁日期 → 填写联系信息 → 提交订单 → 等待确认。</p>
+    <h3>Q4: 如何租赁戏服？</h3>
+    <p>进入「戏服租赁」页面 → 选择心仪款式 → 选择租赁日期 → 填写联系信息 → 提交订单 → 等待确认。</p>
 
     <h3>Q5: 订单如何支付？</h3>
     <p>目前支持微信支付、支付宝等多种支付方式。具体支付方式以结算页面显示为准。</p>
@@ -175,9 +175,9 @@
       <ul>
         <li>🎉 首次发布</li>
         <li>✨ 3D脸谱展示功能</li>
-        <li>✨ 汉服租赁系统</li>
+        <li>✨ 戏服租赁系统</li>
         <li>✨ 文创商城</li>
-        <li>✨ 云端数据同步</li>
+        <li>✨ 本地数据管理</li>
         <li>✨ 数据可视化仪表盘</li>
       </ul>
     </div>
@@ -200,7 +200,7 @@
       <p><strong>项目名称</strong>：晋梆智绎</p>
       <p><strong>服务地址</strong>：<a href="https://jinbangzhiyi.online">https://jinbangzhiyi.online</a></p>
       <p><strong>隐私政策</strong>：<a href="./privacy.html">点击查看</a></p>
-      <p><strong>技术支持</strong>：腾讯云 CloudBase</p>
+      <p><strong>技术支持</strong>：本地 IndexedDB 与 Express 服务</p>
     </div>
 
     <h2 id="legal">法律信息</h2>
@@ -211,7 +211,8 @@
 
     <div class="footer">
       <p>© 2026 晋梆智绎 版权所有</p>
-      <p style="margin-top: 8px;">技术支持：腾讯云 CloudBase</p>
+      <p><a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">晋ICP备2026006293号-1</a></p>
+      <p style="margin-top: 8px;">技术支持：本地 IndexedDB 与 Express 服务</p>
     </div>
   </div>
 </body>

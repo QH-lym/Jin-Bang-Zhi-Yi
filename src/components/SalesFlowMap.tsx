@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import db from '../db'
-import { syncOrderToCloud, syncRentalOrderToCloud } from '../utils/cloudSync'
 
 // 建默认示例日志
 function buildDefaultLogs() {
@@ -10,12 +9,12 @@ function buildDefaultLogs() {
   logs.push(
     { id: idCounter++, city: '浙江省杭州市', goods: '晋剧脸谱盲盒 x2', quantity: 2, time: '刚刚' },
     { id: idCounter++, city: '北京市朝阳区', goods: '皮影戏人偶套装 x1', quantity: 1, time: '2分钟前' },
-    { id: idCounter++, city: '广东省广州市', goods: '汉服租赁·明制 x3', quantity: 3, time: '5分钟前' },
+    { id: idCounter++, city: '广东省广州市', goods: '戏服租赁·青衣 x3', quantity: 3, time: '5分钟前' },
     { id: idCounter++, city: '四川省成都市', goods: '戏曲主题丝巾 x1', quantity: 1, time: '8分钟前' },
     { id: idCounter++, city: '山西省太原市', goods: '剪纸艺术书签套装 x2', quantity: 2, time: '10分钟前' },
     { id: idCounter++, city: '上海市浦东新区', goods: '非遗陶瓷茶具 x1', quantity: 1, time: '12分钟前' },
     { id: idCounter++, city: '江苏省南京市', goods: '刺绣香囊挂件 x4', quantity: 4, time: '15分钟前' },
-    { id: idCounter++, city: '湖北省武汉市', goods: '汉服租赁·唐制 x2', quantity: 2, time: '18分钟前' },
+    { id: idCounter++, city: '湖北省武汉市', goods: '戏服租赁·武生 x2', quantity: 2, time: '18分钟前' },
     { id: idCounter++, city: '陕西省西安市', goods: '木版年画装饰画 x1', quantity: 1, time: '20分钟前' },
     { id: idCounter++, city: '湖南省长沙市', goods: '青铜纹饰文创摆件 x1', quantity: 1, time: '22分钟前' },
   )
@@ -54,7 +53,7 @@ async function buildLogsFromDB() {
           logs.push({
             id: idCounter++,
             city: o.address?.includes('北京') ? '北京市' : o.address?.includes('上海') ? '上海市' : o.address?.includes('广州') ? '广州市' : o.address?.includes('杭州') ? '浙江省杭州市' : '山西省太原市',
-            goods: item.name || '汉服租赁',
+            goods: item.name || '戏服租赁',
             quantity: item.quantity || 1,
             time: o.createdAt ? `${Math.floor((Date.now() - new Date(o.createdAt).getTime()) / 60000)}分钟前` : '刚刚'
           })
@@ -119,21 +118,6 @@ export default function SalesFlowMap() {
     Promise.all([db.orders.count(), db.rentalOrders.count()]).then(([s, r]) => setOrderCount(s + r)).catch(() => {})
   }, [])
 
-  // 订单数据同步到 CloudBase
-  useEffect(() => {
-    const syncInterval = setInterval(async () => {
-      try {
-        const shopOrders = await db.orders.toArray()
-        const rentalOrders = await db.rentalOrders.toArray()
-        for (const order of shopOrders) { await syncOrderToCloud(order) }
-        for (const order of rentalOrders) { await syncRentalOrderToCloud(order) }
-      } catch (err) {
-        console.error('订单同步到 CloudBase 失败:', err)
-      }
-    }, 10000)
-    return () => clearInterval(syncInterval)
-  }, [])
-
   // 模拟实时订单更新
   useEffect(() => {
     const interval = setInterval(() => {
@@ -141,7 +125,7 @@ export default function SalesFlowMap() {
       const newLog = {
         id: Date.now(),
         city: Object.keys(cityCoords)[Math.floor(Math.random() * Object.keys(cityCoords).length)],
-        goods: ['晋剧脸谱盲盒', '皮影戏人偶套装', '汉服租赁·明制', '戏曲主题丝巾', '剪纸艺术书签套装'][Math.floor(Math.random() * 5)],
+        goods: ['晋剧脸谱盲盒', '皮影戏人偶套装', '戏服租赁·青衣', '戏曲主题丝巾', '剪纸艺术书签套装'][Math.floor(Math.random() * 5)],
         quantity: Math.floor(Math.random() * 3) + 1,
         time: '刚刚'
       } as const
@@ -333,7 +317,7 @@ export default function SalesFlowMap() {
         <h3 className="text-sm font-semibold text-white/70">📦 订单流向图</h3>
         <div className="flex items-center gap-2">
           {mapStatus === 'loading' && <div className="text-xs text-amber-400/60 animate-pulse">地图加载中...</div>}
-          {mapStatus === 'ready' && <div className="text-xs text-emerald-400/60">实时同步中</div>}
+          {mapStatus === 'ready' && <div className="text-xs text-emerald-400/60">本地数据</div>}
           {mapStatus === 'error' && <div className="text-xs text-red-400/60">地图加载失败</div>}
         </div>
       </div>

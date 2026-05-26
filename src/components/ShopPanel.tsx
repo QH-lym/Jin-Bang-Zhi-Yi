@@ -1,6 +1,6 @@
 ﻿import { useState, useCallback, useEffect, useMemo, type ChangeEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { SyntheticEvent } from 'react'
+import type { CSSProperties, SyntheticEvent } from 'react'
 import { ShoppingBag, Heart, Search, Star, Plus, Minus, ChevronLeft, Edit, X, Package, Truck, ShieldCheck, CreditCard, CheckCircle } from 'lucide-react'
 import { getProducts, updateProduct, placeShopOrder } from '../data/dbStore'
 import PaymentModal from './PaymentModal'
@@ -15,27 +15,49 @@ type Product = {
   tags: string[]; isNew?: boolean; isHot?: boolean
 }
 
-const img = (n: number) => {
-  // 使用 svg 图片（product-1.svg 到 product-9.svg）
-  return new URL(`../assets/products/product-${n}.svg`, import.meta.url).href
+const productImageAssets = [
+  new URL('../assets/products/product-1.png', import.meta.url).href,
+  new URL('../assets/products/product-2.png', import.meta.url).href,
+  new URL('../assets/products/product-3.png', import.meta.url).href,
+  new URL('../assets/products/product-4.png', import.meta.url).href,
+  new URL('../assets/products/product-5.png', import.meta.url).href,
+  new URL('../assets/products/product-6.png', import.meta.url).href,
+  new URL('../assets/products/product-7.png', import.meta.url).href,
+  new URL('../assets/products/product-8.png', import.meta.url).href,
+  new URL('../assets/products/product-9.png', import.meta.url).href,
+]
+const productImageForId = (id: string | number) => {
+  const match = String(id).match(/\d+/)
+  const index = Math.max(1, Number(match?.[0]) || 1) - 1
+  return productImageAssets[index % productImageAssets.length]
 }
+const productImagePositions = ['50% 50%', '28% 50%', '70% 48%', '42% 40%', '18% 62%', '82% 58%', '54% 72%', '64% 36%', '50% 50%']
+const imageObjectPosition = (id: string) => {
+  const index = Math.max(1, Number(String(id).replace(/\D/g, '')) || 1) - 1
+  return productImagePositions[index % productImagePositions.length]
+}
+const productImageStyle = (id: string): CSSProperties => ({
+  objectFit: 'cover',
+  objectPosition: imageObjectPosition(id),
+})
 const resolveProductImage = (image: unknown, id: string) => {
-  const imageValue = typeof image === 'string' ? image : ''
-  const matched = imageValue.match(/product-(\d+)\.(svg|png|jpg|jpeg)/)
-  if (matched) return img(Number(matched[1]))
-  return imageValue || img(Number(id) || 1)
+  const imageValue = typeof image === 'string' ? image.trim() : ''
+  const matched = imageValue.match(/product-(\d+)\.(svg|png|jpg|jpeg)/i)
+  if (matched) return productImageForId(matched[1])
+  if (!imageValue || /generated\/(cultural-products|opera-stage)\.png/i.test(imageValue)) return productImageForId(id)
+  return imageValue
 }
 
 const products: Product[] = [
-  { id: '1', name: '晋剧脸谱盲盒', category: '文创周边', price: 68, originalPrice: 88, description: '精选晋剧经典脸谱造型，随机抽取惊喜款，附赠收藏证书，', image: img(1), rating: 4.8, sales: 1256, tags: ['盲盒', '脸谱', '限量'], isNew: true },
-  { id: '2', name: '剪纸艺术书签套装', category: '文创周边', price: 35, description: '传统晋北剪纸技艺，精选12款非遗图案，金属质感', image: img(2), rating: 4.6, sales: 892, tags: ['剪纸', '书签', '文艺'] },
-  { id: '3', name: '皮影戏人偶套装', category: '手作体验', price: 128, originalPrice: 168, description: '手工上色皮影人物，含舞台架，可动手操作表演，', image: img(3), rating: 4.9, sales: 567, tags: ['皮影', '手作', '亲子'], isHot: true },
-  { id: '4', name: '木版年画装饰画', category: '艺术收藏', price: 198, description: '朱仙镇木版年画复刻，手工刷色，装裱完成可直接悬挂', image: img(4), rating: 4.7, sales: 334, tags: ['年画', '装饰', '装裱'] },
-  { id: '5', name: '戏曲主题丝巾', category: '服饰配件', price: 88, originalPrice: 128, description: '真丝材质，晋剧旦角图案数码印花，优雅大方', image: img(5), rating: 4.5, sales: 1523, tags: ['丝巾', '真丝', '时尚'], isHot: true },
-  { id: '6', name: '青铜纹饰文创摆件', category: '家居装饰', price: 256, description: '晋侯墓地青铜器纹饰复刻，树脂材质，精致仿古，', image: img(6), rating: 4.8, sales: 245, tags: ['青铜', '摆件', '收藏'] },
-  { id: '7', name: '刺绣香囊挂件', category: '手作体验', price: 45, description: '平遥刺绣工艺，内含中药香囊，可作车挂/包挂', image: img(7), rating: 4.4, sales: 2134, tags: ['刺绣', '香囊', '传统'] },
-  { id: '8', name: '非遗陶瓷茶具套装', category: '家居生活', price: 368, originalPrice: 428, description: '大同陶瓷工艺，手工拉坯，包含茶壶+6茶杯', image: img(8), rating: 4.9, sales: 678, tags: ['陶瓷', '茶具', '非遗'], isNew: true },
-  { id: '9', name: '晋剧唱腔CD专辑', category: '音像制品', price: 58, description: '收录经典唱段15首，老艺人原声录制，精装盒装', image: img(9), rating: 4.7, sales: 456, tags: ['CD', '唱腔', '经典'] },
+  { id: '1', name: '晋剧脸谱盲盒', category: '文创周边', price: 68, originalPrice: 88, description: '精选晋剧经典脸谱造型，随机抽取惊喜款，附赠收藏证书，', image: productImageForId(1), rating: 4.8, sales: 1256, tags: ['盲盒', '脸谱', '限量'], isNew: true },
+  { id: '2', name: '剪纸艺术书签套装', category: '文创周边', price: 35, description: '传统晋北剪纸技艺，精选12款非遗图案，金属质感', image: productImageForId(2), rating: 4.6, sales: 892, tags: ['剪纸', '书签', '文艺'] },
+  { id: '3', name: '皮影戏人偶套装', category: '手作体验', price: 128, originalPrice: 168, description: '手工上色皮影人物，含舞台架，可动手操作表演，', image: productImageForId(3), rating: 4.9, sales: 567, tags: ['皮影', '手作', '亲子'], isHot: true },
+  { id: '4', name: '木版年画装饰画', category: '艺术收藏', price: 198, description: '朱仙镇木版年画复刻，手工刷色，装裱完成可直接悬挂', image: productImageForId(4), rating: 4.7, sales: 334, tags: ['年画', '装饰', '装裱'] },
+  { id: '5', name: '戏曲主题丝巾', category: '服饰配件', price: 88, originalPrice: 128, description: '真丝材质，晋剧旦角图案数码印花，优雅大方', image: productImageForId(5), rating: 4.5, sales: 1523, tags: ['丝巾', '真丝', '时尚'], isHot: true },
+  { id: '6', name: '青铜纹饰文创摆件', category: '家居装饰', price: 256, description: '晋侯墓地青铜器纹饰复刻，树脂材质，精致仿古，', image: productImageForId(6), rating: 4.8, sales: 245, tags: ['青铜', '摆件', '收藏'] },
+  { id: '7', name: '刺绣香囊挂件', category: '手作体验', price: 45, description: '平遥刺绣工艺，内含中药香囊，可作车挂/包挂', image: productImageForId(7), rating: 4.4, sales: 2134, tags: ['刺绣', '香囊', '传统'] },
+  { id: '8', name: '非遗陶瓷茶具套装', category: '家居生活', price: 368, originalPrice: 428, description: '大同陶瓷工艺，手工拉坯，包含茶壶+6茶杯', image: productImageForId(8), rating: 4.9, sales: 678, tags: ['陶瓷', '茶具', '非遗'], isNew: true },
+  { id: '9', name: '晋剧唱腔CD专辑', category: '音像制品', price: 58, description: '收录经典唱段15首，老艺人原声录制，精装盒装', image: productImageForId(9), rating: 4.7, sales: 456, tags: ['CD', '唱腔', '经典'] },
 ]
 
 const categories = ['全部', '文创周边', '手作体验', '艺术收藏', '服饰配件', '家居装饰', '家居生活', '音像制品']
@@ -85,7 +107,7 @@ async function readProductImageFile(file: File): Promise<string> {
 
 function useFallbackImage(event: SyntheticEvent<HTMLImageElement>) {
   const target = event.currentTarget
-  if (target.src !== img(1)) target.src = img(1)
+  if (target.src !== productImageForId(1)) target.src = productImageForId(1)
 }
 
 function normalizeProduct(input: unknown, index = 0): Product {
@@ -176,10 +198,10 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
     const price = Number(newP.price)
     if (isNaN(price) || price <= 0) return
     const newId = `admin-${Date.now()}`
-    const newItem: Product = { id: newId, name: newP.name.trim(), category: newP.category, price, description: newP.description.trim(), image: newP.image || img(1), rating: 4.5, sales: 0, tags: newP.tags.split(',').map(t => t.trim()).filter(Boolean), isNew: true }
+    const newItem: Product = { id: newId, name: newP.name.trim(), category: newP.category, price, description: newP.description.trim(), image: newP.image || productImageForId(1), rating: 4.5, sales: 0, tags: newP.tags.split(',').map(t => t.trim()).filter(Boolean), isNew: true }
     // Save to Dexie
     import('../data/dbStore').then(({ addProduct }) => addProduct({
-      id: newId, name: newP.name.trim(), category: newP.category, price, description: newP.description.trim(), image: newP.image || img(1), rating: 4.5, sales: 0, tags: newP.tags.split(',').map(t => t.trim()).filter(Boolean), isNew: true,
+      id: newId, name: newP.name.trim(), category: newP.category, price, description: newP.description.trim(), image: newP.image || productImageForId(1), rating: 4.5, sales: 0, tags: newP.tags.split(',').map(t => t.trim()).filter(Boolean), isNew: true,
     })).catch(() => {})
     setPL(prev => [newItem, ...prev])
     setShowAdd(false); setNewP({ name: '', category: '文创周边', price: '', description: '', tags: '', image: '' })
@@ -211,7 +233,7 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
 
   const completeOrder = useCallback((recip: string, phone: string, addr: string) => {
     const order = { orderNo, items: cartProds.map(p => ({ id: p.id, name: p.name, price: p.price, qty: cart.get(p.id) })), total: cartTotal, recip, phone, addr, createdAt: new Date().toLocaleString() }
-    // Save to Dexie as primary store (IndexedDB), cloud sync handles remote
+    // Save to Dexie as the primary local store.
     placeShopOrder({ id: orderNo, accountId: ca?.id || 'guest', items: cartProds.map(p => ({ productId: p.id, name: p.name, price: p.price, quantity: cart.get(p.id) || 0 })), total: cartTotal, recipient: recip, phone, address: addr, status: 'paid', createdAt: new Date().toISOString() }).catch((e) => {
       console.warn('Dexie save failed:', e)
     })
@@ -296,7 +318,7 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
         onClick={() => setSelectedProduct(p)} className="group cursor-pointer">
         <div className="glass-panel rounded-xl overflow-hidden transition-all group-hover:scale-[1.02]">
           <div className="relative h-48 overflow-hidden bg-gray-900">
-            <img src={p.image} alt={p.name} className="h-full w-full object-cover transition-transform group-hover:scale-110" loading="lazy" onError={useFallbackImage} />
+            <img src={p.image} alt={p.name} className="h-full w-full transition-transform group-hover:scale-110" style={productImageStyle(p.id)} loading="lazy" onError={useFallbackImage} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40" />
             {p.isNew && <span className="absolute top-3 left-3 rounded-lg bg-blue-500/80 px-2 py-1 text-xs font-bold text-white">新品</span>}
             {p.isHot && <span className="absolute top-3 left-3 rounded-lg bg-red-500/80 px-2 py-1 text-xs font-bold text-white">热销</span>}
@@ -356,7 +378,7 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
     <AnimatePresence>{selectedProduct && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setSelectedProduct(null)}>
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-2xl glass-window rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="relative h-64 overflow-hidden bg-gray-900">
-          <img src={selectedProduct.image} alt={selectedProduct.name} className="h-full w-full object-cover" onError={useFallbackImage} />
+          <img src={selectedProduct.image} alt={selectedProduct.name} className="h-full w-full" style={productImageStyle(selectedProduct.id)} onError={useFallbackImage} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60" />
           <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 rounded-lg bg-black/30 p-2 text-white/60 hover:text-white"><X className="h-5 w-5" /></button>
         </div>
@@ -406,7 +428,7 @@ function CartSidebar({ cartView, setCartView, closeCart, cart, cartProds, cartTo
       {cartView === 'cart' && <div className="p-6"><div className="flex justify-between mb-4"><h2 className="text-xl font-bold text-white flex items-center gap-2"><ShoppingBag className="h-5 w-5 text-amber-400" />购物车</h2>
         <button onClick={closeCart} className="rounded-lg p-2 text-white/60 hover:text-white glass-control"><X className="h-5 w-5" /></button></div>
         {cartProds.length === 0 ? <p className="py-20 text-center text-white/40">购物车是空的</p> : <>{cartProds.map(p => <div key={p.id} className="flex items-center gap-3 rounded-xl p-3 glass-control mb-2">
-          <div className="h-16 w-16 shrink-0 rounded-lg bg-gray-900/50 overflow-hidden"><img src={p.image} alt={p.name} className="h-full w-full object-cover" onError={useFallbackImage} /></div>
+          <div className="h-16 w-16 shrink-0 rounded-lg bg-gray-900/50 overflow-hidden"><img src={p.image} alt={p.name} className="h-full w-full" style={productImageStyle(p.id)} onError={useFallbackImage} /></div>
           <div className="flex-1"><div className="text-sm text-white/90">{p.name}</div><div className="text-amber-400 font-bold">¥{p.price}</div></div>
           <div className="flex items-center gap-2"><button onClick={() => remCart(p.id)} className="rounded-lg p-1 text-white/60 glass-control hover:text-white"><Minus className="h-4 w-4" /></button>
             <span className="text-white w-6 text-center">{cart.get(p.id)}</span><button onClick={() => addCart(p.id)} className="rounded-lg p-1 text-white/60 glass-control hover:text-white"><Plus className="h-4 w-4" /></button></div>
@@ -417,7 +439,7 @@ function CartSidebar({ cartView, setCartView, closeCart, cart, cartProds, cartTo
       </div>}
       {cartView === 'checkout' && <div className="p-6"><div className="flex items-center gap-3 mb-4"><button onClick={() => setCartView('cart')} className="rounded-lg p-1.5 glass-control text-white/60 hover:text-white"><ChevronLeft className="h-5 w-5" /></button>
         <h2 className="text-xl font-bold text-white flex items-center gap-2"><CreditCard className="h-5 w-5 text-amber-400" />确认订单</h2></div>
-        {cartProds.map(p => <div key={p.id} className="flex items-center gap-3 py-2"><div className="h-12 w-12 shrink-0 rounded-lg bg-gray-900/50 overflow-hidden"><img src={p.image} alt={p.name} className="h-full w-full object-cover" onError={useFallbackImage} /></div>
+        {cartProds.map(p => <div key={p.id} className="flex items-center gap-3 py-2"><div className="h-12 w-12 shrink-0 rounded-lg bg-gray-900/50 overflow-hidden"><img src={p.image} alt={p.name} className="h-full w-full" style={productImageStyle(p.id)} onError={useFallbackImage} /></div>
           <span className="flex-1 text-sm text-white/85">{p.name}</span><span className="text-white/50">×{cart.get(p.id)}</span><span className="text-amber-400">¥{p.price * (cart.get(p.id) || 0)}</span></div>)}
         <div className="mt-3 pt-3 border-t border-white/10 flex justify-between text-sm"><span>共{totalItems}件</span><span className="text-amber-400 font-bold">¥{cartTotal}</span></div>
         <div className="mt-4 space-y-3">{['收货人','手机号','收货地址'].map((pl, i) => <input key={pl} type={i===1?'tel':'text'} placeholder={pl} value={[recipient,phone,address][i]}

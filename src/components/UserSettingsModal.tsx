@@ -185,7 +185,7 @@ export default function UserSettingsModal({
             <div className="space-y-6">
               {/* Rental Orders */}
               <div>
-                <h3 className="text-sm font-semibold text-white/70 mb-3">👘 汉服租赁</h3>
+                <h3 className="text-sm font-semibold text-white/70 mb-3">👘 戏服租赁</h3>
                 {rentalOrders.length === 0 ? (
                   <p className="text-white/30 text-sm py-4 text-center">暂无租赁记录</p>
                 ) : (

@@ -4,7 +4,6 @@ import { Clock, Eye, EyeOff, Lock, Mail, Phone, User } from 'lucide-react'
 import CanvasBackground from './CanvasBackground'
 import QPagoda from './QPagoda'
 import { Account, loginAccount, registerAccount, resetAccountPassword } from '../accountStore'
-import { syncUserToCloud } from '../utils/cloudSync'
 type View = 'login' | 'register' | 'forgot' | 'email' | 'sms'
 type ToastType = 'success' | 'error' | 'info'
 const logoUrl = `${import.meta.env.BASE_URL}logo.png`
@@ -97,8 +96,6 @@ export default function LoginPage({
       const account = await loginAccount(loginForm.username, loginForm.password)
     if (account) {
       showToast(account.role === 'admin' ? '管理员登录成功' : '登录成功', 'success')
-      // 同步用户数据到 CloudBase
-      syncUserToCloud(account).catch(err => console.error('同步用户数据失败:', err))
       window.setTimeout(() => onLoginSuccess?.(account), 600)
     } else {
       showToast('账号或密码不正确', 'error')
@@ -122,15 +119,13 @@ export default function LoginPage({
     await new Promise((resolve) => window.setTimeout(resolve, 600))
 
     try {
-      const account = await registerAccount({
+      await registerAccount({
         username: regForm.username,
         displayName: regForm.displayName,
         email: regForm.email,
         phone: regForm.phone,
         password: regForm.password,
       })
-      // 同步注册的用户到 CloudBase
-      syncUserToCloud(account).catch(err => console.error('同步注册用户失败:', err))
       onAccountsChange?.()
       showToast('注册成功，请登录', 'success')
       setCurrentView('login')
@@ -348,10 +343,10 @@ export default function LoginPage({
             </span>
           </motion.h1>
           <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-10 max-w-xl text-lg leading-relaxed text-white/72">
-            汇集晋剧观赏、汉服租赁、文创商城、脸谱工坊与文化地图，让非遗内容从浏览、学习到体验自然流转。
+            汇集晋剧观赏、戏服租赁、文创商城、脸谱工坊与文化地图，让非遗内容从浏览、学习到体验自然流转。
           </motion.p>
           <div className="flex flex-wrap gap-3">
-            {['晋剧演艺', '汉服租赁', '非遗文创', '脸谱创作'].map((tag) => (
+            {['晋剧演艺', '戏服租赁', '非遗文创', '脸谱创作'].map((tag) => (
               <div key={tag} className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm text-amber-100/82">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
                 {tag}
@@ -526,10 +521,12 @@ export default function LoginPage({
       <div className="pointer-events-none fixed bottom-4 right-4 z-50 h-16 w-16 border-r border-b border-amber-500/20" />
 
       {/* 底部链接 */}
-      <div className="fixed bottom-6 left-0 right-0 z-40 flex justify-center gap-6 text-xs text-white/40">
-        <a href="./privacy.html" target="_blank" className="hover:text-amber-400 transition-colors">隐私政策</a>
+      <div className="fixed bottom-6 left-0 right-0 z-40 flex flex-wrap justify-center gap-x-4 gap-y-2 px-6 text-center text-xs text-white/40">
+        <a href="./privacy.html" target="_blank" rel="noreferrer" className="hover:text-amber-400 transition-colors">隐私政策</a>
         <span className="text-white/20">|</span>
-        <a href="./support.html" target="_blank" className="hover:text-amber-400 transition-colors">支持信息</a>
+        <a href="./support.html" target="_blank" rel="noreferrer" className="hover:text-amber-400 transition-colors">支持信息</a>
+        <span className="text-white/20">|</span>
+        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" className="hover:text-amber-400 transition-colors">晋ICP备2026006293号-1</a>
       </div>
     </div>
   )

@@ -4,11 +4,7 @@ import { Users, Package, BookOpen, Shield, TrendingUp, Clock, ChevronDown } from
 import type { Account } from '../accountStore'
 import { getAccounts, updateAccountRole } from '../accountStore'
 import { loadOrders as loadRentalOrders, loadOrdersFromDB, RentalOrder, statusConfig } from '../data/hanfuData'
-// import { pullCloudDataToLocal, syncAllToCloud } from '../utils/cloudSync'
-import CloudSyncPanel from './CloudSyncPanel'
-import CloudSyncDebug from './CloudSyncDebug'
 import { getShopOrders } from '../data/dbStore'
-import { CheckCircle, AlertCircle } from 'lucide-react'
 
 type AdminTab = 'overview' | 'users' | 'orders' | 'content'
 
@@ -18,10 +14,6 @@ export default function AdminDashboard() {
   const [rentalOrders, setRentalOrders] = useState<RentalOrder[]>([])
   const [shopOrders, setShopOrders] = useState<any[]>([])
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  // const [_syncing, setSyncing] = useState(false)
-  // const [syncResult, setSyncResult] = useState<Record<string, boolean> | null>(null)
-  const [syncResult, _setSyncResult] = useState<Record<string, boolean> | null>(null)
-  const [showSyncPanel, setShowSyncPanel] = useState(false)
 
   useEffect(() => { loadData() }, [])
 
@@ -141,7 +133,7 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-white/80">{a.displayName || a.username}</div>
-                <div className="text-xs text-white/40">{a.email || a.phone || '无联系方式'} · {a.id.startsWith('tcb-') ? 'CloudBase账户' : '本地账户'}</div>
+                <div className="text-xs text-white/40">{a.email || a.phone || '无联系方式'} · {a.id.startsWith('tcb-') ? '旧版账户' : '本地账户'}</div>
               </div>
               <select value={a.role} onChange={e => handleRole(a.id, e.target.value as 'admin' | 'user')}
                 className="rounded-xl px-3 py-1.5 text-xs glass-control text-white/80">
@@ -210,7 +202,7 @@ export default function AdminDashboard() {
         <div className="grid md:grid-cols-2 gap-4">
           {[
             { icon: '🎭', label: '剧目管理', desc: `${playsData.length} 部剧目`, hint: '前往演艺观赏 → 管理员添加' },
-            { icon: '👘', label: '汉服管理', desc: '12 款汉服', hint: '前往汉服租赁 → 管理员编辑封面' },
+            { icon: '👘', label: '戏服管理', desc: '12 款戏服', hint: '前往戏服租赁 → 管理员编辑封面' },
             { icon: '🛍️', label: '商品管理', desc: '前往精品好物', hint: '添加/编辑商品和图片' },
             { icon: '📖', label: '课程管理', desc: '6 门课程', hint: '前往普惠教学 → 管理员添加' },
           ].map((c, i) => (
@@ -229,43 +221,8 @@ export default function AdminDashboard() {
         <button onClick={loadData} className="rounded-xl glass-control px-4 py-2 text-xs text-white/50 hover:text-white mr-2">
           🔄 刷新数据
         </button>
-        <button onClick={() => setShowSyncPanel(true)}
-          className="rounded-xl px-4 py-2 text-xs font-bold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 flex items-center gap-2 mx-2">
-          📡 同步服务器
-        </button>
-        {syncResult && (
-          <div className="mt-3 text-left max-h-48 overflow-auto rounded-xl glass-panel p-3 text-xs space-y-1">
-            <div className="font-bold text-amber-300 mb-2">同步结果：</div>
-            {Object.entries(syncResult).map(([key, ok]) => (
-              <div key={key} className={`flex items-center gap-2 ${ok ? 'text-green-400' : 'text-red-400'}`}>
-                {ok ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                <span className="text-white/50">{key}</span>
-                <span>{ok ? '成功' : '失败'}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-
-      {/* 云端同步弹窗 */}
-      {showSyncPanel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowSyncPanel(false)}>
-          <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto mx-4" onClick={e => e.stopPropagation()}>
-            <CloudSyncPanel
-              onClose={() => {
-                setShowSyncPanel(false)
-                loadData() // 同步完成后刷新数据
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* 云端同步调试 */}
-      <div className="mt-8">
-        <CloudSyncDebug />
-      </div>
-        </div>
+    </div>
     )
 }
 

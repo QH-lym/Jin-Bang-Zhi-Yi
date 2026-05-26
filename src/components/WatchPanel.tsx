@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'rea
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, CheckCircle, Clock3, Heart, Play, Search, Star, Theater } from 'lucide-react'
 import PaymentModal from './PaymentModal'
-import { loadDanmuFromCloud, syncDanmuToCloud } from '../utils/cloudSync'
 
 type PlayItem = {
   id: string
@@ -23,7 +22,8 @@ type PlayItem = {
 
 type Danmu = { id: number; author: string; text: string; top: number; delay: number; tone: string }
 
-const playCover = (n: number) => new URL(`../assets/plays/play-${n}.svg`, import.meta.url).href
+const generatedAsset = (name: string) => `${import.meta.env.BASE_URL}generated/${name}`
+const playCover = (n: number) => generatedAsset(`play-${((Math.max(1, n) - 1) % 8) + 1}.jpg`)
 
 const categories = ['全部', '经典剧目', '折子戏', '名家导赏', '新编戏']
 const danmuTones = ['bg-amber-400/22 text-amber-50', 'bg-sky-400/20 text-sky-50', 'bg-rose-400/20 text-rose-50', 'bg-emerald-400/18 text-emerald-50']
@@ -53,69 +53,17 @@ export default function WatchPanel({ isAdmin }: { isAdmin: boolean }) {
   const [danmus, setDanmus] = useState<Danmu[]>([])
   const [loading, setLoading] = useState(true)
 
-  // 从云端加载弹幕
   useEffect(() => {
-    const loadDanmu = async () => {
-      setLoading(true)
-      try {
-        const cloudDanmu = await loadDanmuFromCloud()
-        if (cloudDanmu.length > 0) {
-          setDanmus(cloudDanmu.map((d: any, i: number) => ({
-            id: d.id || i + 1,
-            author: d.author || '观众',
-            text: d.text || '',
-            top: d.top || 14 + i * 13,
-            delay: d.delay || i * 0.65,
-            tone: d.tone || danmuTones[i % danmuTones.length]
-          })))
-        } else {
-          // 使用种子弹幕
-          setDanmus(seedDanmu.map((text, i) => ({
-            id: i + 1,
-            author: `票友${i + 1}`,
-            text,
-            top: 14 + i * 13,
-            delay: i * 0.65,
-            tone: danmuTones[i % danmuTones.length]
-          })))
-          // 同步种子弹幕到云端
-          const seedDanmuData = seedDanmu.map((text, i) => ({
-            id: i + 1,
-            author: `票友${i + 1}`,
-            text,
-            top: 14 + i * 13,
-            delay: i * 0.65,
-            tone: danmuTones[i % danmuTones.length]
-          }))
-          await syncDanmuToCloud(seedDanmuData)
-        }
-      } catch (err) {
-        console.error('加载弹幕失败:', err)
-        // 失败时使用种子弹幕
-        setDanmus(seedDanmu.map((text, i) => ({
-          id: i + 1,
-          author: `票友${i + 1}`,
-          text,
-          top: 14 + i * 13,
-          delay: i * 0.65,
-          tone: danmuTones[i % danmuTones.length]
-        })))
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadDanmu()
+    setDanmus(seedDanmu.map((text, i) => ({
+      id: i + 1,
+      author: `票友${i + 1}`,
+      text,
+      top: 14 + i * 13,
+      delay: i * 0.65,
+      tone: danmuTones[i % danmuTones.length]
+    })))
+    setLoading(false)
   }, [])
-
-  // 弹幕变化时同步到云端
-  useEffect(() => {
-    if (!loading && danmus.length > 0) {
-      const syncInterval = setInterval(async () => {
-        await syncDanmuToCloud(danmus)
-      }, 5000) // 每5秒同步一次
-      return () => clearInterval(syncInterval)
-    }
-  }, [danmus, loading])
 
   const filtered = useMemo(() => playsData.filter(p => {
     if (category !== '全部' && p.category !== category) return false

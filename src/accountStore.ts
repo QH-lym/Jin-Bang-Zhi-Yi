@@ -64,22 +64,6 @@ async function verifyPassword(pw: string, stored: string): Promise<{ ok: boolean
 
 function normalize(v: string) { return v.trim().toLowerCase() }
 
-function syncAccountProfile(account: DbAccount) {
-  import('./utils/cloudSync')
-    .then(({ syncUserToCloud }) => syncUserToCloud({
-      id: account.id,
-      username: account.username,
-      displayName: account.displayName,
-      email: account.email,
-      phone: account.phone,
-      avatar: account.avatar,
-      role: account.role,
-      createdAt: account.createdAt,
-      lastLoginAt: account.lastLoginAt,
-    }))
-    .catch(error => console.warn('[CloudBase] 用户资料同步失败:', error))
-}
-
 export async function findAccount(identifier: string): Promise<DbAccount | undefined> {
   const key = normalize(identifier)
   return db.accounts
@@ -96,9 +80,7 @@ export async function loginAccount(identifier: string, password: string): Promis
   const updates: Partial<DbAccount> = { lastLoginAt }
   if (verification.needsMigration) updates.password = await hashPassword(password)
   await db.accounts.update(account.id, updates)
-  const next = { ...account, ...updates }
-  syncAccountProfile(next)
-  return next
+  return { ...account, ...updates }
 }
 
 export async function registerAccount(input: {
@@ -135,7 +117,6 @@ export async function registerAccount(input: {
     createdAt: new Date().toISOString(),
   }
   await db.accounts.add(account)
-  syncAccountProfile(account)
   return account
 }
 
@@ -159,7 +140,6 @@ export async function updateAccount(id: string, updates: Partial<Pick<DbAccount,
   const account = await db.accounts.get(id)
   if (!account) throw new Error('账户不存在')
   await db.accounts.update(id, updates)
-  syncAccountProfile({ ...account, ...updates })
 }
 
 export async function changePassword(id: string, oldPassword: string, newPassword: string): Promise<void> {
@@ -173,8 +153,6 @@ export async function changePassword(id: string, oldPassword: string, newPasswor
 
 export async function updateAccountRole(id: string, role: 'admin' | 'user'): Promise<void> {
   await db.accounts.update(id, { role })
-  const account = await db.accounts.get(id)
-  if (account) syncAccountProfile(account)
 }
 
 // Sync fallback for backward compat - returns empty (admin handled separately)
