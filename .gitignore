@@ -52,3 +52,14 @@ Thumbs.db
 
 # Claude
 .claude/
+
+# Server build output
+server/dist/
+server/data/
+
+# Cross-platform (not integrated)
+cross-platform-adaptation/
+
+# Misc
+*.py
+!scripts/maintenance/*.py
