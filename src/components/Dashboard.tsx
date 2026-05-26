@@ -27,8 +27,8 @@ const ShopPanel = lazy(() => import('./ShopPanel'))
 const SalesFlowMap = lazy(() => import('./SalesFlowMap'))
 const OperaMap = lazy(() => import('./OperaMap'))
 const AIChat = lazy(() => import('./AIChat'))
-const FaceWorkshop = lazy(() => import('./FaceWorkshop'))
-const HanfuRental = lazy(() => import('./HanfuRental'))
+const FaceWorkshop = lazy(() => import('./face-workshop'))
+const HanfuRental = lazy(() => import('./hanfu-rental'))
 const AdminDashboard = lazy(() => import('./AdminDashboard'))
 const WatchPanel = lazy(() => import('./WatchPanel'))
 const UserSettingsModal = lazy(() => import('./UserSettingsModal'))
@@ -37,13 +37,13 @@ const logoUrl = `${import.meta.env.BASE_URL}logo.png`
 // 模块预加载映射表
 const modulePreloadMap: Record<TabId, () => Promise<unknown>> = {
   watch: () => import('./WatchPanel'),
-  study: () => import('./HanfuRental'),
+  study: () => import('./hanfu-rental'),
   shop: () => import('./ShopPanel'),
   course: () => Promise.resolve(), // 内联组件，无需预加载
   social: () => Promise.resolve(), // 内联组件，无需预加载
   map: () => import('./OperaMap'),
   chat: () => import('./AIChat'),
-  face: () => import('./FaceWorkshop'),
+  face: () => import('./face-workshop'),
   admin: () => import('./AdminDashboard'),
 }
 
@@ -348,7 +348,8 @@ export default function Dashboard({
   const handleToggleLike = useCallback((postId: number) => {
     setLikedPosts(prev => {
       const next = new Set(prev)
-      next.has(postId) ? next.delete(postId) : next.add(postId)
+      if (next.has(postId)) next.delete(postId)
+      else next.add(postId)
       return next
     })
   }, [])

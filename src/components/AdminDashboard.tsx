@@ -45,7 +45,12 @@ export default function AdminDashboard() {
   }
 
   const toggleExpand = (id: string) => {
-    setExpanded(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
+    setExpanded(p => {
+      const n = new Set(p)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
   }
 
   return (

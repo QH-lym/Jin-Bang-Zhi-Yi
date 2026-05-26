@@ -181,13 +181,24 @@ export default function ShopPanel({ currentAccount: ca, initialQuery = '' }: { c
     if (initialQuery) setQuery(initialQuery)
   }, [initialQuery])
 
-  const toggleFav = useCallback((id: string) => setFavorites(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n }), [])
+  const toggleFav = useCallback((id: string) => setFavorites(p => {
+    const n = new Set(p)
+    if (n.has(id)) n.delete(id)
+    else n.add(id)
+    return n
+  }), [])
   const addCart = useCallback((id: string) => {
     setCart(p => { const n = new Map(p); n.set(id, (n.get(id) || 0) + 1); return n })
     setAddedAnim(id)
     setTimeout(() => setAddedAnim(null), 800)
   }, [])
-  const remCart = useCallback((id: string) => setCart(p => { const n = new Map(p); const c = n.get(id) || 0; c <= 1 ? n.delete(id) : n.set(id, c - 1); return n }), [])
+  const remCart = useCallback((id: string) => setCart(p => {
+    const n = new Map(p)
+    const c = n.get(id) || 0
+    if (c <= 1) n.delete(id)
+    else n.set(id, c - 1)
+    return n
+  }), [])
   const cartIds = useMemo(() => Array.from(cart.keys()), [cart])
   const totalItems = useMemo(() => Array.from(cart.values()).reduce((s, c) => s + c, 0), [cart])
   const safeProductList = useMemo(() => productList.map(normalizeProduct), [productList])
