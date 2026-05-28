@@ -1,4 +1,4 @@
-import { Component, Suspense, lazy, useMemo, useState, useCallback, useEffect, type ErrorInfo, type ReactNode } from 'react'
+import { Suspense, lazy, useMemo, useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight,
@@ -10,18 +10,19 @@ import {
   MapPin,
   MessageCircle,
   Palette,
-  Plus,
   Search,
   ShieldCheck,
   ShoppingBag,
   Shield,
   Sparkles,
-  Star,
   Theater,
   Users,
   Wand2,
 } from 'lucide-react'
 import { Account } from '../accountStore'
+import { ModuleFallback, ModuleErrorBoundary } from './ErrorBoundary'
+import SocialPanel, { type Post, type Comment } from './SocialPanel'
+import CoursePanel, { type Course, type NewCourse, courseCover, courses } from './CoursePanel'
 
 const ShopPanel = lazy(() => import('./ShopPanel'))
 const SalesFlowMap = lazy(() => import('./SalesFlowMap'))
@@ -55,53 +56,6 @@ function preloadModule(tabId: TabId) {
   }
 }
 
-function ModuleFallback() {
-  return (
-    <div className="flex min-h-[18rem] items-center justify-center">
-      <div className="glass-control rounded-2xl px-5 py-3 text-sm text-white/60">正在加载模块...</div>
-    </div>
-  )
-}
-
-class ModuleErrorBoundary extends Component<
-  { children: ReactNode; moduleName: string },
-  { hasError: boolean; message: string }
-> {
-  state = { hasError: false, message: '' }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, message: error.message || '模块加载失败' }
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error(`[${this.props.moduleName}] render failed`, error, info)
-  }
-
-  componentDidUpdate(prevProps: { moduleName: string }) {
-    if (prevProps.moduleName !== this.props.moduleName && this.state.hasError) {
-      this.setState({ hasError: false, message: '' })
-    }
-  }
-
-  render() {
-    if (!this.state.hasError) return this.props.children
-
-    return (
-      <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-6 text-center">
-        <div className="text-sm font-bold text-red-200">{this.props.moduleName}暂时无法打开</div>
-        <div className="mt-2 text-xs text-white/50">{this.state.message}</div>
-        <button
-          type="button"
-          onClick={() => this.setState({ hasError: false, message: '' })}
-          className="mt-4 rounded-xl bg-white/10 px-4 py-2 text-sm text-white/70 hover:bg-white/15"
-        >
-          重新打开
-        </button>
-      </div>
-    )
-  }
-}
-
 type TabId = 'watch' | 'study' | 'shop' | 'course' | 'social' | 'map' | 'chat' | 'face' | 'admin'
 
 const menuItems: Array<{ id: TabId; icon: typeof Theater; label: string }> = [
@@ -128,39 +82,11 @@ const tabContent: Record<TabId, { title: string; subtitle: string }> = {
   chat: { title: '小e · AI助手', subtitle: '与智能助手对话，快速获取晋剧文化和文创推荐' },
 }
 
-const generatedAsset = (name: string) => `${import.meta.env.BASE_URL}generated/${name}`
 const shopHeroProducts = [
   { name: '晋剧脸谱盲盒', image: new URL('../assets/products/product-1.png', import.meta.url).href },
   { name: '戏曲主题丝巾', image: new URL('../assets/products/product-5.png', import.meta.url).href },
   { name: '非遗陶瓷茶具套装', image: new URL('../assets/products/product-8.png', import.meta.url).href },
 ]
-const courseImages = [
-  'course-1.jpg',
-  'course-2.jpg',
-  'course-3.jpg',
-  'course-4.jpg',
-  'course-5.jpg',
-  'course-6.jpg',
-]
-const courseCover = (n: number) => generatedAsset(courseImages[(Math.max(1, n) - 1) % courseImages.length])
-
-const courses = [
-  { id: 1, title: '晋剧身段入门', category: '基础课程', total: 12, done: 8, teacher: '王老师', teacherTitle: '国家一级演员', next: '水袖基础组合', level: '入门', students: 156, rating: 4.8, description: '系统学习晋剧身段的基本功，从站姿、步法到水袖运用，掌握传统戏曲表演的基础技巧。', tags: ['身段', '基础', '表演'], image: courseCover(1), lessons: ['台步与圆场', '云手与亮相', '水袖基础组合'], outcome: '能完成一段 60 秒身段小组合' },
-  { id: 2, title: '唱念发声训练', category: '声乐课程', total: 10, done: 5, teacher: '李老师', teacherTitle: '戏曲声乐专家', next: '上口字归韵', level: '中级', students: 89, rating: 4.9, description: '专业晋剧唱腔训练，学习梆子腔、流水板等传统唱法，培养纯正的戏曲发声技巧。', tags: ['唱腔', '发声', '声乐'], image: courseCover(2), lessons: ['气息支撑', '上口字归韵', '流水板唱段'], outcome: '能独立演唱一段基础唱腔' },
-  { id: 3, title: '锣鼓经节奏课', category: '音乐课程', total: 8, done: 3, teacher: '张老师', teacherTitle: '晋剧音乐传承人', next: '慢板转快板', level: '入门', students: 124, rating: 4.7, description: '学习晋剧传统锣鼓经的节奏规律，从基础节奏到复杂板式变化，感受戏曲音乐的韵律美。', tags: ['锣鼓', '节奏', '音乐'], image: courseCover(3), lessons: ['基础锣鼓点', '慢板转快板', '动作与节奏配合'], outcome: '能听辨常用板式并跟拍练习' },
-  { id: 4, title: '晋剧经典剧目赏析', category: '理论课程', total: 15, done: 6, teacher: '刘老师', teacherTitle: '戏曲理论研究员', next: '《打金枝》人物分析', level: '进阶', students: 203, rating: 4.9, description: '深入剖析晋剧经典剧目，理解剧情结构、人物塑造和艺术特色，提升欣赏水平。', tags: ['剧目', '赏析', '理论'], image: courseCover(4), lessons: ['《打金枝》结构', '人物行当分析', '舞台调度解读'], outcome: '能写出一份剧目赏析笔记' },
-  { id: 5, title: '戏曲化妆与造型', category: '实践课程', total: 6, done: 2, teacher: '陈老师', teacherTitle: '戏曲化妆师', next: '脸谱绘制基础', level: '入门', students: 78, rating: 4.6, description: '学习传统戏曲化妆技巧，从基础打底到脸谱绘制，掌握人物造型的艺术表现。', tags: ['化妆', '造型', '实践'], image: courseCover(5), lessons: ['底妆与眉眼', '脸谱色彩含义', '角色造型搭配'], outcome: '能完成一张角色妆面设计稿' },
-  { id: 6, title: '晋剧文化历史', category: '文化课程', total: 10, done: 4, teacher: '赵老师', teacherTitle: '戏曲史专家', next: '清代晋剧发展', level: '中级', students: 167, rating: 4.8, description: '探索晋剧的历史发展脉络，了解戏曲文化的传承与演变，感受传统文化魅力。', tags: ['历史', '文化', '传承'], image: courseCover(6), lessons: ['蒲州梆子源流', '班社与名家', '当代传承案例'], outcome: '能讲清晋剧发展脉络和代表人物' }
-]
-
-type Course = (typeof courses)[number]
-
-type Comment = { id?: number; author: string; text: string; avatar?: string; createdAt?: string }
-
-type Post = {
-  id: number; author: string; avatar: string; level: string; topic: string; type: string
-  replies: number; likes: number; time: string; tags: string[]; content: string; comments?: Comment[]
-}
 
 const socialPostsStorageKey = 'jinbang.social.posts'
 const socialLikesStorageKey = (accountId: string) => `jinbang.social.likes.${accountId}`
@@ -207,11 +133,6 @@ const posts: Post[] = [
   { id: 5, author: '戏曲研习者', avatar: '📚', level: '学者', topic: '讨论晋剧中"梆子腔"的音乐特色和传承意义', type: '讨论', replies: 31, likes: 67, time: '12小时前', tags: ['梆子腔', '音乐', '传承'], content: '梆子腔作为晋剧的灵魂，承载着丰富的音乐内涵。从节奏到旋律，都蕴含着深厚的文化底蕴。大家怎么看梆子腔在现代戏曲传承中的地位和作用？' },
   { id: 6, author: '晋韵票友团', avatar: '🎤', level: '票友组织', topic: '本周末票友聚会，欢迎新老票友加入！', type: '活动', replies: 15, likes: 38, time: '1天前', tags: ['聚会', '票友', '交流'], content: '晋韵票友团本周末举办月度聚会活动，内容包括唱段交流、身段练习和茶话会。无论你是资深票友还是戏曲爱好者，都欢迎前来参加！地址：山西大戏楼，时间：周六下午2点。' },
 ]
-
-type NewCourse = {
-  title: string; category: string; total: number; teacher: string; teacherTitle: string
-  level: string; students: number; rating: number; description: string; tags: string
-}
 
 type NavigatePayload = {
   courseQuery?: string
@@ -294,7 +215,7 @@ export default function Dashboard({
     const tabOrder: TabId[] = ['watch', 'study', 'shop', 'course', 'social', 'map', 'chat', 'face']
     const currentIndex = tabOrder.indexOf(activeTab)
     if (currentIndex === -1) return
-    
+
     // 延迟 2 秒后预加载相邻模块（避免影响当前模块加载）
     const timer = setTimeout(() => {
       // 预加载前一个模块
@@ -306,7 +227,7 @@ export default function Dashboard({
         preloadModule(tabOrder[currentIndex + 1])
       }
     }, 2000)
-    
+
     return () => clearTimeout(timer)
   }, [activeTab])
 
@@ -448,8 +369,8 @@ export default function Dashboard({
       {/* Mobile Bottom Nav */}
       <nav className="fixed z-40 flex justify-around ios-tabbar px-1 py-1 lg:hidden">
         {menuItems.filter(item => item.id !== 'admin' || isAdmin).map(item => (
-          <button 
-            key={item.id} 
+          <button
+            key={item.id}
             onClick={() => navigateTo(item.id)}
             onMouseEnter={() => preloadModule(item.id)}
             onTouchStart={() => preloadModule(item.id)}
@@ -466,8 +387,8 @@ export default function Dashboard({
         <aside className="ios-sidebar hidden lg:flex lg:w-56 lg:flex-col lg:overflow-y-auto text-white">
           <nav className="flex-1 px-3 pt-5 space-y-1">
             {menuItems.filter(item => item.id !== 'admin' || isAdmin).map(item => (
-              <button 
-                key={item.id} 
+              <button
+                key={item.id}
                 onClick={() => navigateTo(item.id)}
                 onMouseEnter={() => preloadModule(item.id)}
                 className={`ios-touch ios-focus-ring flex items-center gap-3 w-full rounded-2xl px-4 py-3 text-sm font-medium transition-all ${activeTab === item.id ? 'nav-active' : 'text-white/[0.52] hover:text-white/[0.86] hover:bg-white/[0.07]'}`}>
@@ -589,6 +510,9 @@ export default function Dashboard({
         {showCourseDetail && selectedCourse && <CourseDetailPanel course={selectedCourse} onClose={handleCloseCourseDetail} />}
         {showSettings && <UserSettingsModal account={accountInfo} accountsSnapshot={accounts} onClose={() => setShowSettings(false)} onUpdate={handleAccountUpdate} />}
       </AnimatePresence>
+
+      {/* 备案号 */}
+      <BeianFooter />
     </div>
   )
 }
@@ -768,112 +692,33 @@ function CourseDetailPanel({ course, onClose }: { course: Course; onClose: () =>
   )
 }
 
-// ─── Course Panel ───
-function CoursePanel({ query, onQueryChange, selectedCategory, onCategoryChange, courses, categories, onSelectCourse, isAdmin, showAddCourse, onToggleAddCourse, newCourse, onNewCourseChange, onAddCourse }: {
-  query: string; onQueryChange: (v: string) => void; selectedCategory: string; onCategoryChange: (v: string) => void
-  courses: Course[]; categories: string[]; onSelectCourse: (c: Course) => void
-  isAdmin: boolean; showAddCourse: boolean; onToggleAddCourse: () => void
-  newCourse: NewCourse; onNewCourseChange: (c: NewCourse) => void; onAddCourse: () => void
-}) {
+// ─── 备案号 Footer ───
+function BeianFooter() {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="relative flex-1 max-w-lg"><Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/40" /><input value={query} onChange={e => onQueryChange(e.target.value)} placeholder="搜索课程..." className="w-full rounded-xl pl-12 pr-4 py-3 text-white outline-none placeholder-white/40 glass-control" /></div>
-        <select value={selectedCategory} onChange={e => onCategoryChange(e.target.value)} className="rounded-xl px-4 py-3 text-sm text-white glass-control">{categories.map(c => <option key={c} value={c} className="bg-gray-900">{c}</option>)}</select>
+    <footer className="fixed bottom-0 left-0 right-0 z-30 py-2 px-4 text-center text-[11px] text-white/30 bg-black/40 backdrop-blur-sm border-t border-white/5">
+      <div className="flex items-center justify-center gap-4 flex-wrap">
+        <span>晋ICP备2026006293号-1</span>
+        <span className="hidden sm:inline">|</span>
+        <a
+          href="https://beian.miit.gov.cn/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-amber-300/70 transition-colors"
+        >
+          工信部备案
+        </a>
+        <span className="hidden sm:inline">|</span>
+        <a
+          href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=14070002000082"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 hover:text-amber-300/70 transition-colors"
+        >
+          <Shield className="h-3 w-3" />
+          晋公网安备14070002000082号
+        </a>
       </div>
-      {isAdmin && (
-        <div className="glass-panel rounded-xl p-4 border border-amber-500/15">
-          <div className="flex justify-between items-center"><div className="text-sm font-semibold text-amber-300">管理员添加课程</div><button onClick={onToggleAddCourse} className="inline-flex items-center gap-2 rounded-xl px-4 py-2 glass-control text-sm"><Plus className="h-4 w-4" />{showAddCourse ? '关闭' : '添加'}</button></div>
-          {showAddCourse && (
-            <div className="mt-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3"><input value={newCourse.title} onChange={e => onNewCourseChange({ ...newCourse, title: e.target.value })} placeholder="课程名称" className="rounded-xl px-4 py-2 text-sm text-white glass-control" /><input value={newCourse.teacher} onChange={e => onNewCourseChange({ ...newCourse, teacher: e.target.value })} placeholder="讲师" className="rounded-xl px-4 py-2 text-sm text-white glass-control" /></div>
-              <button onClick={onAddCourse} className="rounded-xl bg-gradient-to-r from-red-800 to-red-600 px-5 py-2 text-sm font-bold text-white">保存</button>
-            </div>
-          )}
-        </div>
-      )}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {courses.map(c => (
-          <div key={c.id} onClick={() => onSelectCourse(c)} className="glass-panel rounded-2xl overflow-hidden cursor-pointer hover:border-amber-500/20 transition-all">
-            <div className="relative h-36 overflow-hidden">
-              <img src={c.image || courseCover(1)} alt={c.title} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <span className="absolute left-3 top-3 text-xs px-2 py-0.5 rounded-full bg-white/15 text-white/80">{c.category}</span>
-              <span className="absolute right-3 top-3 text-xs text-amber-300"><Star className="h-3 w-3 inline fill-amber-400" /> {c.rating}</span>
-            </div>
-            <div className="p-4">
-              <h3 className="font-bold text-white/90">{c.title}</h3>
-              <p className="text-xs text-white/40 mt-1">{c.teacher} · {c.teacherTitle}</p>
-              <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/50">{c.description}</p>
-              <div className="mt-3 flex items-center gap-2 flex-wrap">{c.tags.map(t => <span key={t} className="text-xs px-2 py-0.5 rounded-md bg-white/5 text-white/50">#{t}</span>)}</div>
-              <div className="mt-3 h-1.5 rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-amber-400" style={{ width: `${Math.round(c.done / c.total * 100)}%` }} /></div>
-              <div className="mt-2 flex justify-between text-xs text-white/40"><span>{c.done}/{c.total} 节 · {c.next}</span><span>{c.students} 学员</span></div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Social Panel ───
-function SocialPanel({ query, onQueryChange, posts, selectedType, onTypeChange, types, likedPosts, onToggleLike, onSelectPost, onPublish, onDeletePost, isAdmin }: {
-  query: string; onQueryChange: (v: string) => void; posts: Post[]; selectedType: string; onTypeChange: (v: string) => void
-  types: string[]; likedPosts: Set<number>; onToggleLike: (id: number) => void
-  onSelectPost: (p: Post) => void; onPublish: (content: string, topic: string, type: string) => void
-  onDeletePost: (id: number) => void; isAdmin: boolean
-}) {
-  const [showPublish, setShowPublish] = useState(false)
-  const [pubContent, setPubContent] = useState('')
-  const [pubTopic, setPubTopic] = useState('')
-  const [pubType, setPubType] = useState('分享')
-  const filtered = posts.filter(p => { const m1 = selectedType === '全部' || p.type === selectedType; const m2 = !query || p.content.includes(query) || p.topic.includes(query) || p.author.includes(query); return m1 && m2 })
-  const handlePublish = () => { if (!pubContent.trim()) return; onPublish(pubContent.trim(), pubTopic.trim(), pubType); setPubContent(''); setPubTopic(''); setPubType('分享'); setShowPublish(false) }
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="relative flex-1 max-w-lg"><Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/40" /><input value={query} onChange={e => onQueryChange(e.target.value)} placeholder="搜索动态..." className="w-full rounded-xl pl-12 pr-4 py-3 text-white outline-none placeholder-white/40 glass-control" /></div>
-        <button onClick={() => setShowPublish(true)} className="inline-flex items-center gap-2 rounded-xl bg-amber-500/20 px-5 py-3 text-sm font-bold text-amber-300 hover:bg-amber-500/30"><Plus className="h-4 w-4" />发布动态</button>
-      </div>
-      <AnimatePresence>
-        {showPublish && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={() => setShowPublish(false)}>
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-lg rounded-3xl bg-[#090507] p-6 glass-window" onClick={e => e.stopPropagation()}>
-              <h3 className="text-lg font-bold text-white mb-4">发布动态</h3>
-              <input value={pubTopic} onChange={e => setPubTopic(e.target.value)} placeholder="标题（可选）" className="w-full rounded-xl px-4 py-2.5 mb-3 text-sm text-white glass-control" />
-              <textarea value={pubContent} onChange={e => setPubContent(e.target.value)} placeholder="分享你的想法..." className="w-full rounded-xl px-4 py-2.5 mb-3 text-sm text-white glass-control min-h-[120px] resize-none" />
-              <div className="flex gap-2 mb-4">{types.filter(t => t !== '全部').map(t => (<button key={t} onClick={() => setPubType(t)} className={`rounded-xl px-3 py-1.5 text-xs ${pubType === t ? 'bg-amber-500/30 text-amber-300' : 'glass-control text-white/60'}`}>{t}</button>))}</div>
-              <div className="flex gap-2"><button onClick={() => setShowPublish(false)} className="flex-1 rounded-xl py-2.5 glass-control text-sm text-white/60">取消</button><button onClick={handlePublish} className="flex-1 rounded-xl py-2.5 bg-amber-500/20 text-sm font-bold text-amber-300">发布</button></div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <div className="flex gap-2 overflow-x-auto">{types.map(t => (<button key={t} onClick={() => onTypeChange(t)} className={`shrink-0 rounded-xl px-4 py-2 text-sm transition-all ${selectedType === t ? 'bg-amber-500/30 text-amber-300' : 'glass-control text-white/60'}`}>{t}</button>))}</div>
-      <div className="space-y-4">
-        {filtered.map(post => {
-          const liked = likedPosts.has(post.id)
-          const likeCount = post.likes + (liked ? 1 : 0)
-          const commentCount = Math.max(post.replies, post.comments?.length || 0)
-          return (
-          <div key={post.id} onClick={() => onSelectPost(post)} className="glass-panel rounded-xl p-5 cursor-pointer hover:border-amber-500/20 transition-all">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-2xl">{post.avatar}</span>
-              <div className="flex-1"><div className="flex items-center gap-2"><span className="font-semibold text-white/90">{post.author}</span><span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/50">{post.level}</span></div><div className="text-xs text-white/40 mt-0.5">{post.time}</div></div>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300">{post.type}</span>
-              {isAdmin && <button onClick={(e) => { e.stopPropagation(); if (confirm('确定删除这条动态？')) onDeletePost(post.id) }} className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20">删除</button>}
-            </div>
-            <h4 className="font-bold text-white/85 mb-2">{post.topic}</h4>
-            <p className="text-sm text-white/60 line-clamp-3">{post.content}</p>
-            <div className="flex items-center gap-2 mt-3 flex-wrap">{post.tags.map(t => <span key={t} className="text-xs text-amber-400/60">#{t}</span>)}</div>
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/10 text-xs text-white/40">
-              <button onClick={(e) => { e.stopPropagation(); onToggleLike(post.id) }} className={`flex items-center gap-1 ${liked ? 'text-red-400' : 'hover:text-white/60'}`}><Heart className={`h-3.5 w-3.5 ${liked ? 'fill-red-400' : ''}`} />{likeCount}</button>
-              <span className="flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" />{commentCount}</span>
-            </div>
-          </div>
-          )
-        })}
-      </div>
-    </div>
+    </footer>
   )
 }
 

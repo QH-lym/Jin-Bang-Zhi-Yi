@@ -5,9 +5,9 @@ import { getServerApiBase } from './cloudFunctions'
 // 兼容旧的验证码登录调用；当前版本仅保留本地账号登录。
 const stubAuth = {
   async signInAnonymously() { return null },
-  async getVerification(_params?: any) { return null },
-  async signInWithEmail(_params?: any) { throw new Error('邮箱验证码登录不可用') },
-  async signInWithSms(_params?: any) { throw new Error('短信验证码登录不可用') },
+  async getVerification(_params?: Record<string, unknown>) { return null },
+  async signInWithEmail(_params?: Record<string, unknown>) { throw new Error('邮箱验证码登录不可用') },
+  async signInWithSms(_params?: Record<string, unknown>) { throw new Error('短信验证码登录不可用') },
 }
 
 /** @deprecated 兼容旧调用，请优先使用本地账号登录和服务端文件上传 */

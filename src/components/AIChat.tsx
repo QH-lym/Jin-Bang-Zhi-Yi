@@ -1,10 +1,13 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { requestAiChat } from '../utils/aiClient'
+import { ExternalLink, AlertCircle } from 'lucide-react'
 
 type ChatMessage = {
   role: 'system' | 'user' | 'assistant'
   content: string
 }
+
+type ChatMode = 'chat' | 'client'
 
 const SYSTEM_PROMPT = `你是"晋梆智绎"平台的AI助手"小e"，专门服务于山西晋剧非遗文化领域。你的知识源于：山西12座古戏台实地采集数据、6位晋剧老艺人数字化声腔存档、50+非遗技艺工序拆解。
 
@@ -31,12 +34,26 @@ const quickQuestions = [
   '学唱梆子腔从哪句入门？',
 ]
 
+const CLIENT_URL = 'http://39.106.104.176:1003/client.html'
+
 export default function AIChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'system', content: SYSTEM_PROMPT }])
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [mode, setMode] = useState<ChatMode>('chat')
+  const [iframeError, setIframeError] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
+
+  // 检测是否为 HTTPS 环境
+  const isHttps = window.location.protocol === 'https:'
+
+  useEffect(() => {
+    if (mode === 'client' && isHttps) {
+      // HTTPS 环境下 iframe 加载 HTTP 内容会被阻止
+      setIframeError(true)
+    }
+  }, [mode, isHttps])
 
   const sendMessage = async (text?: string) => {
     const msg = (text || inputValue).trim()
@@ -76,6 +93,78 @@ export default function AIChat() {
 
   return (
     <div className="space-y-4">
+      {/* Mode Toggle */}
+      <div className="flex gap-2 p-1 rounded-xl bg-white/5 border border-white/10 w-fit">
+        <button
+          onClick={() => setMode('chat')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            mode === 'chat'
+              ? 'bg-amber-500/20 text-amber-300'
+              : 'text-white/50 hover:text-white/70'
+          }`}
+        >
+          💬 对话模式
+        </button>
+        <button
+          onClick={() => setMode('client')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            mode === 'client'
+              ? 'bg-amber-500/20 text-amber-300'
+              : 'text-white/50 hover:text-white/70'
+          }`}
+        >
+          🖥️ 客户端模式
+        </button>
+      </div>
+
+      {/* Content based on mode */}
+      {mode === 'client' ? (
+        <div className="glass-panel rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-white">🖥️ AI客户端</h2>
+              <p className="text-xs text-white/40 mt-0.5">智能对话客户端 · 实时交互体验</p>
+            </div>
+          </div>
+          
+          {iframeError ? (
+            /* HTTPS 环境下显示提示和外部链接 */
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-6 text-center">
+              <AlertCircle className="h-12 w-12 mx-auto mb-4 text-amber-400" />
+              <h3 className="text-lg font-semibold text-amber-200 mb-2">浏览器安全限制</h3>
+              <p className="text-sm text-white/70 mb-4 max-w-md mx-auto">
+                由于您的网站使用 HTTPS 安全协议，无法直接嵌入 HTTP 内容。
+                请点击下方按钮在新窗口中打开 AI 客户端。
+              </p>
+              <a
+                href={CLIENT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 px-6 py-3 text-sm font-bold text-amber-300 transition-all"
+              >
+                <ExternalLink className="h-4 w-4" />
+                在新窗口打开 AI 客户端
+              </a>
+              <p className="text-xs text-white/40 mt-4">
+                客户端地址：{CLIENT_URL}
+              </p>
+            </div>
+          ) : (
+            /* HTTP 环境下正常显示 iframe */
+            <iframe
+              src={CLIENT_URL}
+              width="100%"
+              height="600px"
+              frameBorder="0"
+              style={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}
+              title="AI客户端"
+              className="bg-black/50"
+              onError={() => setIframeError(true)}
+            />
+          )}
+        </div>
+      ) : (
+      <>
       {/* Quick questions */}
       <div className="flex flex-wrap gap-2">
         {quickQuestions.map((q, i) => (
@@ -125,6 +214,8 @@ export default function AIChat() {
           </button>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

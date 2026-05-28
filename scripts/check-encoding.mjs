@@ -9,7 +9,7 @@ const ignoredPaths = [
   join(root, 'android', 'app', 'build'),
   join(root, 'android', 'app', 'src', 'main', 'assets', 'public'),
 ]
-const mojibakePattern = /�|[鏅婕姹绉绮惧搧濂界墿儬欏鎴忌洸鑴歌氨宸潑灏廵绠＄悊馃鈥]{2,}/
+const mojibakePattern = /�|(?:[鏅婕姹绉绮惧搧濂界墿儬欏鎴忌洸鑴歌氨宸潑灏廵绠＄悊馃鈥]{2,})|(?:[鐧诲綍澶辫触锛岃閲嶈瘯璐﹀彿鎴栧瘑鐮佷笉姝ｇ]{3,})/
 
 function walk(dir, files = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {

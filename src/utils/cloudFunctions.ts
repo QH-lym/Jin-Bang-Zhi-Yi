@@ -16,7 +16,7 @@ export function getServerApiBase() {
   return API_BASE
 }
 
-export interface CloudFunctionResponse<T = any> {
+export interface CloudFunctionResponse<T = unknown> {
   code: number
   message: string
   data?: T
@@ -51,10 +51,10 @@ async function request<T>(
       data: body.data,
       error: body.error,
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       code: -1,
-      message: `Server request failed: ${error.message || error}`,
+      message: `Server request failed: ${error instanceof Error ? error.message : String(error)}`,
     }
   }
 }
@@ -73,9 +73,9 @@ function toQuery(params?: Record<string, unknown>) {
   return value ? `?${value}` : ''
 }
 
-export async function callFunction<T = any>(
+export async function callFunction<T = unknown>(
   name: string,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
 ): Promise<CloudFunctionResponse<T>> {
   return request<T>(`/${name}`, {
     method: 'POST',
@@ -88,7 +88,7 @@ export const authApi = {
     request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
 
   login: (data: { username: string; password: string }) =>
-    request<{ token: string; user: any }>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+    request<{ token: string; user: Record<string, unknown> }>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
 
   anonymous: () =>
     Promise.resolve({ code: 0, message: 'ok', data: { uid: 'server-anonymous', token: '' } }),
@@ -96,7 +96,7 @@ export const authApi = {
   getProfile: (userId: string) =>
     crudApi.get('users', userId),
 
-  updateProfile: (userId: string, updates: Record<string, any>) =>
+  updateProfile: (userId: string, updates: Record<string, unknown>) =>
     crudApi.update('users', userId, updates),
 
   listUsers: (params?: { page?: number; pageSize?: number; keyword?: string; role?: string }) =>
@@ -110,24 +110,24 @@ export const authApi = {
 }
 
 export const crudApi = {
-  list: <T = any>(collection: string, params?: {
-    condition?: Record<string, any>
+  list: <T = unknown>(collection: string, params?: {
+    condition?: Record<string, unknown>
     orderBy?: string
     order?: 'asc' | 'desc'
     page?: number
     pageSize?: number
   }) => request<{ list: T[]; total: number; totalPages?: number }>(`/crud/${collection}${toQuery(params)}`),
 
-  get: <T = any>(collection: string, id: string) =>
+  get: <T = unknown>(collection: string, id: string) =>
     request<T>(`/crud/${collection}/${encodeURIComponent(id)}`),
 
-  create: (collection: string, data: Record<string, any>) =>
+  create: (collection: string, data: Record<string, unknown>) =>
     request<{ id: string }>(`/crud/${collection}`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  update: (collection: string, id: string, data: Record<string, any>) =>
+  update: (collection: string, id: string, data: Record<string, unknown>) =>
     request(`/crud/${collection}/${encodeURIComponent(id)}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -136,7 +136,7 @@ export const crudApi = {
   remove: (collection: string, id: string) =>
     request(`/crud/${collection}/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
-  batchCreate: (collection: string, dataList: Record<string, any>[]) =>
+  batchCreate: (collection: string, dataList: Record<string, unknown>[]) =>
     request<{ count: number; ids: string[] }>(`/crud/${collection}/batch`, {
       method: 'POST',
       body: JSON.stringify({ dataList }),
@@ -148,7 +148,7 @@ export const crudApi = {
       body: JSON.stringify({ ids }),
     }),
 
-  count: (collection: string, condition?: Record<string, any>) =>
+  count: (collection: string, condition?: Record<string, unknown>) =>
     request<{ total: number }>(`/crud/${collection}/count${toQuery({ condition })}`),
 }
 
@@ -182,7 +182,7 @@ export const businessApi = {
     phone?: string
     address?: string
     amount: number
-    items?: any[]
+    items?: Record<string, unknown>[]
     remark?: string
   }) => request<{ orderId: string }>('/business/orders', { method: 'POST', body: JSON.stringify(data) }),
 
